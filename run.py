@@ -1,7 +1,11 @@
 # %%
 import torch
 from torch import nn
-from torch.utils.data import DataLoader, TensorDataset, random_split
+from torch.utils.data import (
+    DataLoader,
+    TensorDataset,
+    random_split
+)
 from torch import optim
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -44,3 +48,5 @@ trainer = Trainer(
 )
 
 trainer.train(num_epochs=24)
+# TODO: Finish implementation with proper graphs, tests and recquired characteristics for the model
+# TODO: Create a class for saving performance for given metrics at each epoch and plotting for selected metrics
