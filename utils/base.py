@@ -11,7 +11,8 @@ from typing import (
     List,
     Optional,
     Tuple,
-    Union
+    Union,
+    Dict
 )
 
 class CustomDataset(Dataset):
@@ -76,6 +77,13 @@ class CustomDataset(Dataset):
 			
         return sample
 
+from typing import Dict, Tuple, Union
+import torch
+from torch import nn
+from torch.utils.data import DataLoader
+from torch.optim import Optimizer
+
+
 class Trainer:
     """
     Custom trainer class for training and validating a PyTorch model.
@@ -87,16 +95,18 @@ class Trainer:
         optimizer (torch.optim.Optimizer): Optimizer for updating the model parameters.
         criterion (torch.nn.Module): Loss function to be used during training and validation.
         device (torch.device): The device on which the model and data are placed (e.g., 'cpu', 'cuda').
+        trainLoss (Dict[int, float]): Dictionary that stores the average training loss for each epoch.
+        valLoss (Dict[int, float]): Dictionary that stores the average validation loss for each epoch.
     """
     def __init__(
         self, 
-        model: Module, 
+        model: nn.Module, 
         train_loader: DataLoader, 
         val_loader: DataLoader, 
         optimizer: Optimizer, 
-        criterion: LossFunction, 
+        criterion: nn.Module, 
         device: Union[torch.device, str]
-    ):
+    ) -> None:
         """
         Initializes the Trainer class.
 
@@ -114,8 +124,10 @@ class Trainer:
         self.optimizer = optimizer
         self.criterion = criterion
         self.device = device
+        self.trainLoss: Dict[int, float] = {}
+        self.valLoss: Dict[int, float] = {}
 
-    def train(self, num_epochs: int) -> None:
+    def train(self, num_epochs: int) -> Tuple[Dict[int, float], Dict[int, float]]:
         """
         Trains the model for a given number of epochs.
 
@@ -123,12 +135,14 @@ class Trainer:
             num_epochs (int): The number of epochs to train the model.
         
         Returns:
-            None
+            (trainLoss, valLoss):
+            A tuple containing two dictionaries of both losses for each epoch
         """
         for epoch in range(num_epochs):
             self.model.train()  # Set the model to training mode
             total_loss = 0
             
+            # Iterate over batches in the training DataLoader
             for batch in self.train_loader:
                 inputs, targets = batch
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
@@ -144,14 +158,22 @@ class Trainer:
                 
                 total_loss += loss.item()  # Sum the loss for this epoch
                 
-            avg_loss = total_loss / len(self.train_loader)
+            avg_loss = total_loss / len(self.train_loader)  # Calculate the average training loss
             print(f'Epoch {epoch + 1}/{num_epochs} | Loss: {avg_loss:.4f}')
-            
-            self.validate()  # Validate after each epoch
-            
-    def validate(self) -> None:
+
+            self.trainLoss[epoch] = avg_loss
+
+            # Call the validation step after each epoch
+            self.validate(epoch)
+
+        return self.trainLoss, self.valLoss
+
+    def validate(self, epoch: int) -> None:
         """
         Validates the model after each epoch.
+
+        Args:
+            epoch (int): The current epoch number to store validation loss.
 
         Returns:
             None
@@ -170,8 +192,10 @@ class Trainer:
                 
                 total_val_loss += val_loss.item()
         
-        avg_val_loss = total_val_loss / len(self.val_loader)
+        avg_val_loss = total_val_loss / len(self.val_loader)  # Calculate the average validation loss
         print(f'\tValidation Loss: {avg_val_loss:.4f}\n')
+
+        self.valLoss[epoch] = avg_val_loss
 
 class LinearRegression(Module):
     """
