@@ -77,13 +77,6 @@ class CustomDataset(Dataset):
 			
         return sample
 
-from typing import Dict, Tuple, Union
-import torch
-from torch import nn
-from torch.utils.data import DataLoader
-from torch.optim import Optimizer
-
-
 class Trainer:
     """
     Custom trainer class for training and validating a PyTorch model.
@@ -148,11 +141,11 @@ class Trainer:
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
                 
                 # Forward pass
-                outputs = self.model(inputs)
-                loss = self.criterion(outputs, targets)
+                predictions = self.model(inputs)
+                loss = self.criterion(predictions, targets)
                 
                 # Backward pass and optimization
-                self.optimizer.zero_grad()  # Clear gradients
+                self.optimizer.zero_grad()
                 loss.backward()  # Backpropagation
                 self.optimizer.step()  # Update weights
                 
@@ -209,7 +202,7 @@ class LinearRegression(Module):
         forward(X: Tensor) -> Tensor: Performs a forward pass (predicts the output for input X).
     """
 
-    def __init__(self, in_dims: int, out_dims: int):
+    def __init__(self, in_dims: int, out_dims: int = 1):
         """
         Initializes the LinearRegression model with random weights and bias.
 
@@ -219,8 +212,8 @@ class LinearRegression(Module):
         """
         super(LinearRegression, self).__init__()
         
-        self.w = nn.Parameter(torch.randn(in_dims, out_dims, requires_grad=True))
-        self.b = nn.Parameter(torch.randn(1, requires_grad=True))
+        self.w = nn.Parameter(torch.randn(in_dims, out_dims, requires_grad=True).squeeze())
+        self.b = nn.Parameter(torch.randn(out_dims, requires_grad=True))
 
     def forward(self, X: Tensor) -> Tensor:
         """
