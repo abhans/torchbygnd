@@ -10,7 +10,7 @@ from torch import optim
 
 import matplotlib.pyplot as plt
 
-from utils.base import LinearRegression, Trainer
+from utils.base import (LinearRegression, Trainer)
 
 plt.style.use("seaborn-v0_8")
 plt.rcParams["font.family"] = "monospace"
@@ -30,13 +30,14 @@ y = 2 * X[:, 0] + 3 * X[:, 1] + 5 + torch.randn(SIZE, dtype=DTYPE, device='cpu')
 
 Data = TensorDataset(X, y)
 # %%
-plt.scatter(X[:, 0].numpy(), y, s=20, edgecolors="b");
-plt.scatter(X[:, 1].numpy(), y, s=20, edgecolors="b");
+plt.scatter(X[:, 0].numpy(), y.numpy(), s=20, edgecolors="b");
+plt.scatter(X[:, 1].numpy(), y.numpy(), s=20, edgecolors="b");
 plt.grid(True, alpha = .6);
 plt.title("Random Generated Data");
 plt.show()
 # %%
 Model = LinearRegression(in_dims=2).to(DEVICE)
+# Model = nn.Linear(in_features=2, out_features=1, bias=True)
 
 trainData, valData = random_split(Data, (0.8, 0.2), generator=GENERATOR)
 
@@ -47,7 +48,7 @@ trainer = Trainer(
     Model,
     trainLoader,
     valLoader,
-    optimizer=optim.SGD(Model.parameters(), lr=1),
+    optimizer=optim.SGD(Model.parameters(), lr=.1),
     criterion=nn.L1Loss(reduction='mean'),
     device=DEVICE
 )

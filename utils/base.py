@@ -226,3 +226,4 @@ class LinearRegression(Module):
             Tensor: Predicted output of shape (batch_size, out_dims)
         """
         return torch.matmul(X, self.w) + self.b
+    
