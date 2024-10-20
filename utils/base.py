@@ -287,13 +287,12 @@ class LossVisualizer:
                 loss_grid[i, j] = self.calculate_loss(w1_grid[i, j], w2_grid[i, j])
         
         # Plot the loss surface in 3D
-        fig = plt.figure(figsize=(12, 8))
+        fig = plt.figure(figsize=(10, 8))
         ax = fig.add_subplot(111, projection='3d')
         ax.plot_surface(w1_grid, w2_grid, loss_grid, cmap='viridis')
 
-        ax.set_xlabel('Weight w1')
-        ax.set_ylabel('Weight w2')
-        ax.set_zlabel('Loss')
+        ax.set_xlabel('Weight w1', labelpad=10)
+        ax.set_ylabel('Weight w2', labelpad=10)
         ax.set_title('Loss Surface for Linear Regression')
 
         plt.show()
