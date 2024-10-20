@@ -1,9 +1,13 @@
 import torch
+import numpy as np
 from torch import nn
 from torch.utils.data import (Dataset, DataLoader)
 from torch.optim import Optimizer
 from torch.nn import Module, Module as LossFunction
 from torch import Tensor
+
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 from typing import (
     Any,
@@ -151,7 +155,7 @@ class Trainer:
                 
                 total_loss += loss.item()  # Sum the loss for this epoch
                 
-            avg_loss = total_loss / len(self.train_loader)  # Calculate the average training loss
+            avg_loss = total_loss / len(self.train_loader)
             print(f'Epoch {epoch + 1}/{num_epochs} | Loss: {avg_loss:.4f}')
 
             self.trainLoss[epoch] = avg_loss
@@ -189,6 +193,110 @@ class Trainer:
         print(f'\tValidation Loss: {avg_val_loss:.4f}\n')
 
         self.valLoss[epoch] = avg_val_loss
+
+class LossVisualizer:
+    """
+    A class to visualize the loss surface for a linear regression model with two features.
+    
+    Attributes:
+        model (torch.nn.Module): A trained linear regression model.
+        train_loader (torch.utils.data.DataLoader): DataLoader for training data.
+        criterion (torch.nn.Module): Loss function (e.g., Mean Squared Error) to visualize.
+        w1_range (tuple): Range of values for the first weight (w1).
+        w2_range (tuple): Range of values for the second weight (w2).
+        device (torch.device or str): Device where the computations will be performed ('cpu' or 'cuda').
+    """
+
+    def __init__(
+            self,
+            model,
+            train_loader,
+            criterion,
+            w1_range=(-10, 10), w2_range=(-10, 10),
+            resolution=50,
+            device='cpu'
+    ):
+        """
+        Initializes the LossVisualizer class.
+        
+        Args:
+            model (torch.nn.Module): A trained linear regression model.
+            train_loader (torch.utils.data.DataLoader): DataLoader for the training dataset.
+            criterion (torch.nn.Module): Loss function (e.g., Mean Squared Error).
+            w1_range (tuple): Range for the first weight (w1).
+            w2_range (tuple): Range for the second weight (w2).
+            resolution (int): Resolution of the grid for visualizing the loss surface.
+            device (str or torch.device): Device where the computations will be performed ('cpu' or 'cuda').
+        """
+        self.model = model.to(device)  # Ensure the model is on the correct device
+        self.train_loader = train_loader
+        self.criterion = criterion
+        self.w1_range = w1_range
+        self.w2_range = w2_range
+        self.resolution = resolution
+        self.device = device  # Ensure all calculations will be performed on this device
+
+    def calculate_loss(self, w1: float, w2: float) -> float:
+        """
+        Calculate the loss for a given pair of weights (w1, w2).
+        
+        Args:
+            w1 (float): The value of the first weight.
+            w2 (float): The value of the second weight.
+        
+        Returns:
+            float: The calculated loss.
+        """
+        # Temporarily set the weights in the model
+        with torch.no_grad():
+            self.model.w[0] = torch.tensor(w1, dtype=torch.float32).to(self.device)  # Move weight to device
+            self.model.w[1] = torch.tensor(w2, dtype=torch.float32).to(self.device)  # Move weight to device
+
+        total_loss = 0
+        num_samples = 0
+        
+        # Iterate over the dataset and compute the loss
+        for batch in self.train_loader:
+            inputs, targets = batch
+            inputs, targets = inputs.to(self.device), targets.to(self.device)  # Move inputs and targets to the same device
+            
+            outputs = self.model(inputs)
+            loss = self.criterion(outputs, targets)
+            total_loss += loss.item() * inputs.size(0)
+            num_samples += inputs.size(0)
+        
+        # Return the average loss
+        return total_loss / num_samples
+
+    def plot_loss_surface(self) -> None:
+        """
+        Plots the 3D loss surface using w1 and w2 as axes.
+        
+        Returns:
+            None
+        """
+        # Create a grid of values for w1 and w2
+        w1_values = np.linspace(self.w1_range[0], self.w1_range[1], self.resolution)
+        w2_values = np.linspace(self.w2_range[0], self.w2_range[1], self.resolution)
+        w1_grid, w2_grid = np.meshgrid(w1_values, w2_values)
+        
+        # Calculate the loss for each combination of w1 and w2
+        loss_grid = np.zeros_like(w1_grid)
+        for i in range(self.resolution):
+            for j in range(self.resolution):
+                loss_grid[i, j] = self.calculate_loss(w1_grid[i, j], w2_grid[i, j])
+        
+        # Plot the loss surface in 3D
+        fig = plt.figure(figsize=(12, 8))
+        ax = fig.add_subplot(111, projection='3d')
+        ax.plot_surface(w1_grid, w2_grid, loss_grid, cmap='viridis')
+
+        ax.set_xlabel('Weight w1')
+        ax.set_ylabel('Weight w2')
+        ax.set_zlabel('Loss')
+        ax.set_title('Loss Surface for Linear Regression')
+
+        plt.show()
 
 class LinearRegression(Module):
     """

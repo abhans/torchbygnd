@@ -10,7 +10,7 @@ from torch import optim
 
 import matplotlib.pyplot as plt
 
-from utils.base import (LinearRegression, Trainer)
+from utils.base import (LinearRegression, Trainer, LossVisualizer)
 
 plt.style.use("seaborn-v0_8")
 plt.rcParams["font.family"] = "monospace"
@@ -19,7 +19,7 @@ plt.rcParams["font.family"] = "monospace"
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 DTYPE = torch.float32
 BATCH_SIZE = 16
-NUM_EPOCHS = 64
+NUM_EPOCHS = 24
 SIZE = 200
 GENERATOR = torch.Generator().manual_seed(42)
 
@@ -48,7 +48,7 @@ trainer = Trainer(
     Model,
     trainLoader,
     valLoader,
-    optimizer=optim.SGD(Model.parameters(), lr=.1),
+    optimizer=optim.RMSprop(Model.parameters(), lr=.1),
     criterion=nn.L1Loss(reduction='mean'),
     device=DEVICE
 )
@@ -64,7 +64,13 @@ plt.grid(True, alpha = .6);
 plt.title("Training Loss");
 plt.show()
 # %%
-
 # TODO: Finish implementation with proper graphs, tests and recquired characteristics for the model
 # TODO: Create a class for saving performance for given metrics at each epoch and plotting for selected metrics
+Visualizer = LossVisualizer(
+    Model,
+    trainLoader,
+    criterion=nn.L1Loss(reduction='mean'),
+    w1_range=(-10, 10), w2_range=(-10, 10)
+)
+Visualizer.plot_loss_surface()
 # %%
