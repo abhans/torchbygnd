@@ -8,6 +8,7 @@ from torch.utils.data import (
 )
 from torch import optim
 
+import numpy as np
 import matplotlib.pyplot as plt
 
 from utils.base import (LinearRegression, Trainer, LossVisualizer)
@@ -30,11 +31,11 @@ y = 2 * X[:, 0] + 3 * X[:, 1] + 5 + torch.randn(SIZE, dtype=DTYPE, device='cpu')
 
 Data = TensorDataset(X, y)
 # %%
-# plt.scatter(X[:, 0].numpy(), y.numpy(), s=20, edgecolors="b");
-# plt.scatter(X[:, 1].numpy(), y.numpy(), s=20, edgecolors="b");
-# plt.grid(True, alpha = .6);
-# plt.title("Random Generated Data");
-# plt.show()
+plt.scatter(X[:, 0].numpy(), y.numpy(), s=20, edgecolors="b");
+plt.scatter(X[:, 1].numpy(), y.numpy(), s=20, edgecolors="b");
+plt.grid(True, alpha = .6);
+plt.title("Random Generated Data");
+plt.show()
 # %%
 Model = LinearRegression(in_dims=2).to(DEVICE)
 # Model = nn.Linear(in_features=2, out_features=1, bias=True)
@@ -55,15 +56,16 @@ trainer = Trainer(
 # %%
 train_loss, val_loss = trainer.train(num_epochs=NUM_EPOCHS)
 
-# plt.plot(
-#     train_loss.keys(),
-#     train_loss.values()
-# );
-# plt.ylim(bottom=0)
-# plt.grid(True, alpha = .6);
-# plt.title("Training Loss");
-# plt.show()
+plt.plot(
+    train_loss.keys(),
+    train_loss.values()
+);
+plt.ylim(bottom=0)
+plt.grid(True, alpha = .6);
+plt.title("Training Loss");
+plt.show()
 # %%
+# TODO: `LossVİsualizer` breaks the trained weights. Resolve the issue.
 # Visualizer = LossVisualizer(
 #     Model,
 #     trainLoader,
@@ -72,4 +74,28 @@ train_loss, val_loss = trainer.train(num_epochs=NUM_EPOCHS)
 # )
 # Visualizer.plot_loss_surface()
 # %%
-print(f"Trained Weights: {Model.w}\nTrained Bias: {Model.b}")
+print(
+    f"Trained Weights: {Model.w.data}",
+    f"Trained Bias: {Model.b.data}",
+    sep="\n"
+)
+
+T = np.linspace(X.min(), X.max(), SIZE, dtype=np.float32).reshape(SIZE, 1)
+T = torch.tensor(np.concatenate([T, T], axis=1), device=DEVICE)
+
+with torch.no_grad():
+    yT = Model(T)
+
+# print(f"\nGenerated T:\n{T}")
+# print(f"\nPredictions:\n{yT}")
+
+plt.scatter(X[:, 0].numpy(), y.numpy(), s=20, edgecolors="b");
+plt.scatter(X[:, 1].numpy(), y.numpy(), s=20, edgecolors="b");
+# Predicted Linear Model
+plt.plot(T[:, 0].cpu().numpy(), yT.cpu().numpy(), color="black", alpha=.7, linestyle='--', label="Predictions");
+plt.grid(True, alpha = .6);
+plt.title("Trained Model");
+plt.xlabel("$W_1, W_2$");
+plt.ylabel("Target ($y_{pred}$)")
+plt.legend(loc='best');
+plt.show()
