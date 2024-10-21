@@ -139,7 +139,6 @@ class Trainer:
             self.model.train()  # Set the model to training mode
             total_loss = 0
             
-            # Iterate over batches in the training DataLoader
             for batch in self.train_loader:
                 inputs, targets = batch
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
@@ -151,9 +150,13 @@ class Trainer:
                 # Backward pass and optimization
                 self.optimizer.zero_grad()
                 loss.backward()  # Backpropagation
+
                 self.optimizer.step()  # Update weights
                 
-                total_loss += loss.item()  # Sum the loss for this epoch
+                print(f'\tEpoch {epoch + 1} | Weights: {self.model.w.data}')
+                print(f'\tEpoch {epoch + 1} | Bias: {self.model.b.data}')
+                
+                total_loss += loss.item()
                 
             avg_loss = total_loss / len(self.train_loader)
             print(f'Epoch {epoch + 1}/{num_epochs} | Loss: {avg_loss:.4f}')
@@ -190,7 +193,7 @@ class Trainer:
                 total_val_loss += val_loss.item()
         
         avg_val_loss = total_val_loss / len(self.val_loader)  # Calculate the average validation loss
-        print(f'\tValidation Loss: {avg_val_loss:.4f}\n')
+        print(f'\t| Validation Loss: {avg_val_loss:.4f}\n')
 
         self.valLoss[epoch] = avg_val_loss
 
@@ -319,8 +322,8 @@ class LinearRegression(Module):
         """
         super(LinearRegression, self).__init__()
         
-        self.w = nn.Parameter(torch.randn(in_dims, out_dims, requires_grad=True).squeeze())
-        self.b = nn.Parameter(torch.randn(out_dims, requires_grad=True))
+        self.w = nn.Parameter(torch.randn(in_dims, out_dims).squeeze(), requires_grad=True)
+        self.b = nn.Parameter(torch.randn(out_dims), requires_grad=True)
 
     def forward(self, X: Tensor) -> Tensor:
         """

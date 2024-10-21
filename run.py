@@ -18,8 +18,8 @@ plt.rcParams["font.family"] = "monospace"
 # Constants
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 DTYPE = torch.float32
-BATCH_SIZE = 16
-NUM_EPOCHS = 24
+BATCH_SIZE = 32
+NUM_EPOCHS = 50
 SIZE = 200
 GENERATOR = torch.Generator().manual_seed(42)
 
@@ -30,11 +30,11 @@ y = 2 * X[:, 0] + 3 * X[:, 1] + 5 + torch.randn(SIZE, dtype=DTYPE, device='cpu')
 
 Data = TensorDataset(X, y)
 # %%
-plt.scatter(X[:, 0].numpy(), y.numpy(), s=20, edgecolors="b");
-plt.scatter(X[:, 1].numpy(), y.numpy(), s=20, edgecolors="b");
-plt.grid(True, alpha = .6);
-plt.title("Random Generated Data");
-plt.show()
+# plt.scatter(X[:, 0].numpy(), y.numpy(), s=20, edgecolors="b");
+# plt.scatter(X[:, 1].numpy(), y.numpy(), s=20, edgecolors="b");
+# plt.grid(True, alpha = .6);
+# plt.title("Random Generated Data");
+# plt.show()
 # %%
 Model = LinearRegression(in_dims=2).to(DEVICE)
 # Model = nn.Linear(in_features=2, out_features=1, bias=True)
@@ -48,29 +48,28 @@ trainer = Trainer(
     Model,
     trainLoader,
     valLoader,
-    optimizer=optim.RMSprop(Model.parameters(), lr=.1),
+    optimizer=optim.SGD(Model.parameters(), lr=.1),
     criterion=nn.L1Loss(reduction='mean'),
     device=DEVICE
 )
 # %%
 train_loss, val_loss = trainer.train(num_epochs=NUM_EPOCHS)
 
-plt.plot(
-    train_loss.keys(),
-    train_loss.values()
-);
-plt.ylim(bottom=0)
-plt.grid(True, alpha = .6);
-plt.title("Training Loss");
-plt.show()
+# plt.plot(
+#     train_loss.keys(),
+#     train_loss.values()
+# );
+# plt.ylim(bottom=0)
+# plt.grid(True, alpha = .6);
+# plt.title("Training Loss");
+# plt.show()
 # %%
-# TODO: Finish implementation with proper graphs, tests and recquired characteristics for the model
-# TODO: Create a class for saving performance for given metrics at each epoch and plotting for selected metrics
-Visualizer = LossVisualizer(
-    Model,
-    trainLoader,
-    criterion=nn.L1Loss(reduction='mean'),
-    w1_range=(-10, 10), w2_range=(-10, 10)
-)
-Visualizer.plot_loss_surface()
+# Visualizer = LossVisualizer(
+#     Model,
+#     trainLoader,
+#     criterion=nn.L1Loss(reduction='mean'),
+#     w1_range=(-10, 10), w2_range=(-10, 10)
+# )
+# Visualizer.plot_loss_surface()
 # %%
+print(f"Trained Weights: {Model.w}\nTrained Bias: {Model.b}")
