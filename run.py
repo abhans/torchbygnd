@@ -89,13 +89,13 @@ with torch.no_grad():
 # print(f"\nGenerated T:\n{T}")
 # print(f"\nPredictions:\n{yT}")
 
-# plt.scatter(X[:, 0].numpy(), y.numpy(), s=20, edgecolors="b");
-# plt.scatter(X[:, 1].numpy(), y.numpy(), s=20, edgecolors="b");
+plt.scatter(X[:, 0].numpy(), y.numpy(), s=20, edgecolors="b");
+plt.scatter(X[:, 1].numpy(), y.numpy(), s=20, edgecolors="b");
 # Predicted Linear Model
-# plt.plot(T[:, 0].cpu().numpy(), yT.cpu().numpy(), color="black", alpha=.7, linestyle='--', label="Predictions");
-# plt.grid(True, alpha = .6);
-# plt.title("Trained Model");
-# plt.xlabel("$W_1, W_2$");
-# plt.ylabel("Target ($y_{pred}$)")
-# plt.legend(loc='best');
-# plt.show()
+plt.plot(T[:, 0].cpu().numpy(), yT.cpu().numpy(), color="black", alpha=.7, linestyle='--', label="Predictions");
+plt.grid(True, alpha = .6);
+plt.title("Trained Model");
+plt.xlabel("$W_1, W_2$");
+plt.ylabel("Target ($y_{pred}$)")
+plt.legend(loc='best');
+plt.show()
