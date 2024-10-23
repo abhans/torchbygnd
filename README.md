@@ -111,7 +111,7 @@ For `Minibatch Gradient Descent`, at iteration $\large t$:
 - Compute the "gradient" of "average loss" on the "minibatch" with respect to model parameters
 - Multiply computed gradient with "learning rate" $\large \eta$
 
-$$\large (\mathbf{w}, b) \leftarrow (\mathbf{w}, b) - \eta \frac{1}{|\mathcal{B}|} \sum_{i \in \large \mathcal{B}_t} \partial_{(\mathbf{w},\ b)}\cdot l^{(i)}(\mathbf{w},\ b)$$
+$$(\mathbf{w}, b) \leftarrow (\mathbf{w}, b) - \eta \frac{1}{|\mathcal{B}|} \sum_{i \in \large \mathcal{B}_t} \partial_{(\mathbf{w},\ b)}\cdot l^{(i)}(\mathbf{w},\ b)$$
 
 - $l^{(i)}(\mathbf{w},\ b)$: **Loss** for an instance $\large i$
 - $|\mathcal{B}|$: Number of instances in a **minibatch** (User-defined)
