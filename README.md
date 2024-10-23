@@ -89,9 +89,9 @@ $$\large \nabla{L(\theta)} =\dfrac{\partial}{\partial\theta_{t}}L(\theta)$$
 
 3. Updates the parameters by stepping the **opposite direction of the gradient** scaled by **learning rate**
 
-$$\large \theta_{t} \leftarrow \theta_{t} - \mu \cdot \nabla{L(\theta)}$$
+$$\large \theta_{t} \leftarrow \theta_{t} - \eta \cdot \nabla{L(\theta)}$$
 
-- $\mu$: Learning rate
+- $\eta$: Learning rate
 
 4. Repeat the process for each cycle.
 
