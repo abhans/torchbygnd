@@ -1,4 +1,3 @@
-# %%
 import torch
 from torch import nn
 from torch.utils.data import (
@@ -15,7 +14,7 @@ from utils.base import (LinearRegression, Trainer, LossVisualizer)
 
 plt.style.use("seaborn-v0_8")
 plt.rcParams["font.family"] = "monospace"
-# %%
+
 # Constants
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 DTYPE = torch.float32
@@ -25,18 +24,18 @@ SIZE = 200
 GENERATOR = torch.Generator().manual_seed(42)
 
 print(f"Device has ben set to: {torch.cuda.get_device_properties(DEVICE).name}")
-# %%
+
 X = torch.randn(SIZE, 2, dtype=DTYPE, device='cpu')
 y = 2 * X[:, 0] + 3 * X[:, 1] + 5 + torch.randn(SIZE, dtype=DTYPE, device='cpu')
 
 Data = TensorDataset(X, y)
-# %%
+
 # plt.scatter(X[:, 0].numpy(), y.numpy(), s=20, edgecolors="b");
 # plt.scatter(X[:, 1].numpy(), y.numpy(), s=20, edgecolors="b");
 # plt.grid(True, alpha = .6);
 # plt.title("Random Generated Data");
 # plt.show()
-# %%
+
 Model = LinearRegression(in_dims=2).to(DEVICE)
 # Model = nn.Linear(in_features=2, out_features=1, bias=True)
 
@@ -53,7 +52,7 @@ trainer = Trainer(
     criterion=nn.L1Loss(reduction='mean'),
     device=DEVICE
 )
-# %%
+
 train_loss, val_loss = trainer.train(num_epochs=NUM_EPOCHS)
 
 # plt.plot(
@@ -64,7 +63,7 @@ train_loss, val_loss = trainer.train(num_epochs=NUM_EPOCHS)
 # plt.grid(True, alpha = .6);
 # plt.title("Training Loss");
 # plt.show()
-# %%
+
 # TODO: `LossVisualizer` breaks the trained weights. Resolve the issue.
 # Visualizer = LossVisualizer(
 #     Model,
@@ -73,7 +72,7 @@ train_loss, val_loss = trainer.train(num_epochs=NUM_EPOCHS)
 #     w1_range=(-10, 10), w2_range=(-10, 10)
 # )
 # Visualizer.plot_loss_surface()
-# %%
+
 print(
     f"Trained Weights: {Model.w.data}",
     f"Trained Bias: {Model.b.data}",
