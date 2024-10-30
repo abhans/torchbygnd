@@ -12,9 +12,9 @@ As the time goes on, various information will be provided here.
 
 In order to get reliable results from a `Linear Regression` model, there are several conditions to be met:
 
-1. Correlation between features of data "$\large \mathbf{x}$" and the target $\large y$ must be approx. "LINEAR"
+1. Correlation between features of data $\large \mathbf{x}$ and the target $\large y$ must be approx. "LINEAR"
 
-2. Existing `NOISE` in the data $\large \mathbf{X}$ must sampled from "Gaussian Dsitribution"
+2. Existing `NOISE` in the data $\large \mathbf{X}$ must sampled from "Gaussian Distribution"
 
 ## Building the Intuition
 
