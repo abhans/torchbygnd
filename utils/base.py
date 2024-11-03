@@ -252,24 +252,22 @@ class LossVisualizer:
         """
         # Temporarily set the weights in the model
         with torch.no_grad():
-            self.model.w[0] = torch.tensor(w1, dtype=torch.float32).to(self.device)  # Move weight to device
-            self.model.w[1] = torch.tensor(w2, dtype=torch.float32).to(self.device)  # Move weight to device
+            self.model.w[0] = torch.tensor(w1, dtype=torch.float32).to(self.device)
+            self.model.w[1] = torch.tensor(w2, dtype=torch.float32).to(self.device)
 
         total_loss = 0
         num_samples = 0
-        
-        # Iterate over the dataset and compute the loss
+
         for batch in self.train_loader:
             inputs, targets = batch
-            inputs, targets = inputs.to(self.device), targets.to(self.device)  # Move inputs and targets to the same device
+            inputs, targets = inputs.to(self.device), targets.to(self.device)
             
             outputs = self.model(inputs)
             loss = self.criterion(outputs, targets)
             total_loss += loss.item() * inputs.size(0)
             num_samples += inputs.size(0)
-        
-        # Return the average loss
-        return total_loss / num_samples
+
+        return total_loss / num_samples     # Average Loss
 
     def plot_loss_surface(self) -> None:
         """
@@ -288,14 +286,13 @@ class LossVisualizer:
         for i in range(self.resolution):
             for j in range(self.resolution):
                 loss_grid[i, j] = self.calculate_loss(w1_grid[i, j], w2_grid[i, j])
-        
-        # Plot the loss surface in 3D
+
         fig = plt.figure(figsize=(10, 8))
         ax = fig.add_subplot(111, projection='3d')
         ax.plot_surface(w1_grid, w2_grid, loss_grid, cmap='viridis')
 
-        ax.set_xlabel('Weight w1', labelpad=10)
-        ax.set_ylabel('Weight w2', labelpad=10)
+        ax.set_xlabel('Weight $W_1$', labelpad=10)
+        ax.set_ylabel('Weight $W_2$', labelpad=10)
         ax.set_title('Loss Surface for Linear Regression')
 
         plt.show()
@@ -336,4 +333,42 @@ class LinearRegression(Module):
             Tensor: Predicted output of shape (batch_size, out_dims)
         """
         return torch.matmul(X, self.w) + self.b
+
+class LogisticRegression(Module):
+    """
+    A simple logistic regression model implemented with PyTorch.
+
+    Attributes:
+        w (Tensor): Weights of the logistic regression model.
+        b (Tensor): Bias term of the logistic regression model.
     
+    Methods:
+        forward(X: Tensor) -> Tensor: Performs a forward pass and outputs probabilities.
+    """
+    
+    def __init__(self, in_dims: int, out_dims: int = 1):
+        """
+        Initializes the LogisticRegression model with random weights and bias.
+
+        Args:
+            in_dims (int): Number of input features (dimension of the input).
+            out_dims (int): Number of output features (usually 1 for binary classification).
+        """
+        super(LogisticRegression, self).__init__()
+        
+        # Initializing weights and bias as trainable parameters
+        self.w = nn.Parameter(torch.randn(in_dims, out_dims))
+        self.b = nn.Parameter(torch.randn(out_dims))
+
+    def forward(self, X: Tensor) -> Tensor:
+        """
+        Performs the forward pass through the logistic regression model.
+
+        Args:
+            X (Tensor): Input tensor of shape (batch_size, in_dims).
+
+        Returns:
+            Tensor: Predicted probabilities of shape (batch_size, out_dims), where each element 
+            represents the probability of the positive class for binary classification.
+        """
+        return torch.sigmoid(torch.matmul(X, self.w) + self.b)
