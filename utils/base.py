@@ -319,8 +319,8 @@ class LinearRegression(Module):
         """
         super(LinearRegression, self).__init__()
         
-        self.w = nn.Parameter(torch.randn(in_dims, out_dims).squeeze(), requires_grad=True)
-        self.b = nn.Parameter(torch.randn(out_dims), requires_grad=True)
+        self.w = nn.Parameter(torch.randn(in_dims, out_dims).squeeze())
+        self.b = nn.Parameter(torch.randn(out_dims))
 
     def forward(self, X: Tensor) -> Tensor:
         """
