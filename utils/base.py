@@ -334,9 +334,9 @@ class LinearRegression(Module):
         """
         return torch.matmul(X, self.w) + self.b
 
-class LogisticRegression(Module):
+class LogisticRegression(LinearRegression):
     """
-    A simple logistic regression model implemented with PyTorch.
+    A simple logistic regression model implemented with PyTorch, inheriting from `LinearRegression` class
 
     Attributes:
         w (Tensor): Weights of the logistic regression model.
@@ -354,11 +354,7 @@ class LogisticRegression(Module):
             in_dims (int): Number of input features (dimension of the input).
             out_dims (int): Number of output features (usually 1 for binary classification).
         """
-        super(LogisticRegression, self).__init__()
-        
-        # Initializing weights and bias as trainable parameters
-        self.w = nn.Parameter(torch.randn(in_dims, out_dims))
-        self.b = nn.Parameter(torch.randn(out_dims))
+        super().__init__(in_dims, out_dims)
 
     def forward(self, X: Tensor) -> Tensor:
         """
@@ -371,4 +367,4 @@ class LogisticRegression(Module):
             Tensor: Predicted probabilities of shape (batch_size, out_dims), where each element 
             represents the probability of the positive class for binary classification.
         """
-        return torch.sigmoid(torch.matmul(X, self.w) + self.b)
+        return torch.sigmoid(super().forward(X))
