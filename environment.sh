@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Install NVCC
+sudo apt install nvidia-cuda-toolkit -y 
+
 # Detect CUDA version
 CUDA_VERSION=$(nvcc --version | grep -oP "(?<=V)\d+\.\d+" | head -1)
 
@@ -32,6 +35,8 @@ fi
 # Initialize Conda (activate without modifying the shell's config files)
 source $HOME/anaconda3/etc/profile.d/conda.sh
 conda config --set auto_activate_base False
+
+rm $ANACONDA_INSTALLER
 
 # Create Conda environment
 echo "Creating Conda environment..."
