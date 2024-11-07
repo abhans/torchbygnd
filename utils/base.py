@@ -368,3 +368,22 @@ class LogisticRegression(LinearRegression):
             represents the probability of the positive class for binary classification.
         """
         return torch.sigmoid(super().forward(X))
+    
+# Function Definitions
+def categorical(y: Tensor, num_classes: int) -> Tensor:
+    """
+    Converts integer labels to one-hot encoded format.
+
+    Args:
+        y (Tensor): A tensor of integer labels of shape (N,), where each element is an index
+                    representing a class label (0 <= label < num_classes).
+        num_classes (int): The number of distinct classes.
+
+    Returns:
+        Tensor: A one-hot encoded tensor of shape (N, num_classes), where each row corresponds
+                to a one-hot encoded vector for each label in `y`.
+    """
+    if (y >= num_classes).any() or (y < 0).any():
+        raise ValueError("Labels in `y` should be in the range [0, num_classes - 1].")
+
+    return torch.eye(num_classes, dtype=torch.float32)[y]
