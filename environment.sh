@@ -11,9 +11,6 @@ if [ -z "$CUDA_VERSION" ]; then
     exit 1
 fi
 
-# Replace CUDA version in the environment template file
-sed "s/{{CUDA_VERSION}}/$CUDA_VERSION/g" environment.yml > environment.yml
-
 # Anaconda Installation
 ANACONDA_INSTALLER="Anaconda3-2024.10-1-Linux-x86_64.sh"
 if [ ! -f "$ANACONDA_INSTALLER" ]; then
