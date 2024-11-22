@@ -13,9 +13,11 @@ import numpy as np
 from utils.base import (
     # LinearRegression,
     LogisticRegression,
-    Trainer,
-    clusters
+    Trainer
 )
+
+# User-defined functions
+from utils.preprocess import clusters
 
 # Plotting
 import matplotlib.pyplot as plt
