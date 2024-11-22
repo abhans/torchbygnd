@@ -149,9 +149,9 @@ class Trainer:
                 
                 # Backward pass and optimization
                 self.optimizer.zero_grad()
-                loss.backward()  # Backpropagation
+                loss.backward()
 
-                self.optimizer.step()  # Update weights
+                self.optimizer.step()
                 
                 print(f'\tEpoch {epoch + 1} | Weights: {self.model.w.data}')
                 print(f'\tEpoch {epoch + 1} | Bias: {self.model.b.data}')
@@ -197,6 +197,7 @@ class Trainer:
 
         self.valLoss[epoch] = avg_val_loss
 
+# TODO: `LossVisualizer` breaks the trained weights. Resolve the issue.
 class LossVisualizer:
     """
     A class to visualize the loss surface for a linear regression model with two features.
@@ -318,7 +319,7 @@ class LinearRegression(Module):
             out_dims (int): Number of output features (usually 1 for basic regression).
         """
         super(LinearRegression, self).__init__()
-        
+
         self.w = nn.Parameter(torch.randn(in_dims, out_dims).squeeze())
         self.b = nn.Parameter(torch.randn(out_dims))
 

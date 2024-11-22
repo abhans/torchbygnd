@@ -1,16 +1,24 @@
 import torch
-from torch import nn
+from torch import (optim, nn)
+
 from torch.utils.data import (
     DataLoader,
     TensorDataset,
     random_split
 )
-from torch import optim
 
 import numpy as np
-import matplotlib.pyplot as plt
 
-from utils.base import (LinearRegression, Trainer, LossVisualizer)
+# User-defined classes
+from utils.base import (
+    # LinearRegression,
+    LogisticRegression,
+    Trainer,
+    clusters
+)
+
+# Plotting
+import matplotlib.pyplot as plt
 
 plt.style.use("seaborn-v0_8")
 plt.rcParams["font.family"] = "monospace"
@@ -19,25 +27,17 @@ plt.rcParams["font.family"] = "monospace"
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 DTYPE = torch.float32
 BATCH_SIZE = 32
-NUM_EPOCHS = 50
-SIZE = 200
+NUM_EPOCHS = 20
+SIZE = 100
 GENERATOR = torch.Generator().manual_seed(42)
 
 print(f"Device has ben set to: {torch.cuda.get_device_properties(DEVICE).name}")
 
-X = torch.randn(SIZE, 2, dtype=DTYPE, device='cpu')
-y = 2 * X[:, 0] + 3 * X[:, 1] + 5 + torch.randn(SIZE, dtype=DTYPE, device='cpu')
+X, y = clusters(SIZE, std0 = 1.3, std1 = 1.6, generator=GENERATOR);
 
 Data = TensorDataset(X, y)
 
-# plt.scatter(X[:, 0].numpy(), y.numpy(), s=20, edgecolors="b");
-# plt.scatter(X[:, 1].numpy(), y.numpy(), s=20, edgecolors="b");
-# plt.grid(True, alpha = .6);
-# plt.title("Random Generated Data");
-# plt.show()
-
-Model = LinearRegression(in_dims=2).to(DEVICE)
-# Model = nn.Linear(in_features=2, out_features=1, bias=True)
+Model = LogisticRegression(in_dims=2).to(DEVICE)
 
 trainData, valData = random_split(Data, (0.8, 0.2), generator=GENERATOR)
 
@@ -49,29 +49,11 @@ trainer = Trainer(
     trainLoader,
     valLoader,
     optimizer=optim.SGD(Model.parameters(), lr=.1),
-    criterion=nn.L1Loss(reduction='mean'),
+    criterion=nn.BCELoss(reduction='mean'),        # Binary Cross-entropy Loss (For classification)
     device=DEVICE
 )
 
 train_loss, val_loss = trainer.train(num_epochs=NUM_EPOCHS)
-
-# plt.plot(
-#     train_loss.keys(),
-#     train_loss.values()
-# );
-# plt.ylim(bottom=0)
-# plt.grid(True, alpha = .6);
-# plt.title("Training Loss");
-# plt.show()
-
-# TODO: `LossVisualizer` breaks the trained weights. Resolve the issue.
-# Visualizer = LossVisualizer(
-#     Model,
-#     trainLoader,
-#     criterion=nn.L1Loss(reduction='mean'),
-#     w1_range=(-10, 10), w2_range=(-10, 10)
-# )
-# Visualizer.plot_loss_surface()
 
 print(
     f"Trained Weights: {Model.w.data}",
@@ -79,22 +61,26 @@ print(
     sep="\n"
 )
 
-T = np.linspace(X.min(), X.max(), SIZE, dtype=np.float32).reshape(SIZE, 1)
-T = torch.tensor(np.concatenate([T, T], axis=1), device=DEVICE)
+T = torch.tensor(np.linspace(X.min(), X.max(), SIZE).reshape(SIZE, 1), dtype=DTYPE, device=DEVICE)
+T = torch.cat([T, T], dim=1)
 
 with torch.no_grad():
     yT = Model(T)
 
-# print(f"\nGenerated T:\n{T}")
-# print(f"\nPredictions:\n{yT}")
+plt.scatter(X[y == 0][:, 0], X[y == 0][:, 1], marker='x', label='Cluster y = 0', s=20)
+plt.scatter(X[y == 1][:, 0], X[y == 1][:, 1], marker='+', label='Cluster y = 1', s=40)
+# Decision Boundary
+plt.plot(
+    T[:, 1].cpu(),
+    yT.cpu(),
+    alpha=.5,
+    color='black',
+    linestyle='--',
+    label="Boundary"
+);
 
-plt.scatter(X[:, 0].numpy(), y.numpy(), s=20, edgecolors="b");
-plt.scatter(X[:, 1].numpy(), y.numpy(), s=20, edgecolors="b");
-# Predicted Linear Model
-plt.plot(T[:, 0].cpu().numpy(), yT.cpu().numpy(), color="black", alpha=.7, linestyle='--', label="Predictions");
-plt.grid(True, alpha = .6);
-plt.title("Trained Model");
-plt.xlabel("$W_1, W_2$");
-plt.ylabel("Target ($y_{pred}$)")
+plt.xlabel("Features");
+plt.ylabel("Target/Label");
+plt.title("Generated Data");
 plt.legend(loc='best');
-plt.show()
+plt.show();
