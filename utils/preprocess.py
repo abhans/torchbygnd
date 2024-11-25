@@ -6,14 +6,26 @@ def categorical(y: Tensor, num_classes: int) -> Tensor:
     """
     Converts integer labels to one-hot encoded format.
 
-    Args:
-        y (Tensor): A tensor of integer labels of shape (N,), where each element is an index
-                    representing a class label (0 <= label < num_classes).
-        num_classes (int): The number of distinct classes.
+    Parameters
+    ----------
+    y : Tensor
+        A tensor of integer labels of shape ``(N,)``, where each element 
+        is an index representing a class label. All labels must satisfy 
+        the condition ``0 <= label < num_classes``.
+    num_classes : int
+        The number of distinct classes.
 
-    Returns:
-        Tensor: A one-hot encoded tensor of shape (N, num_classes), where each row corresponds
-                to a one-hot encoded vector for each label in `y`.
+    Returns
+    -------
+    Tensor
+        A one-hot encoded tensor of shape ``(N, num_classes)``, where 
+        each row corresponds to a one-hot encoded vector for each label 
+        in ``y``.
+
+    Raises
+    ------
+    ValueError
+        If any label in ``y`` is outside the range ``[0, num_classes - 1]``.
     """
     if (y >= num_classes).any() or (y < 0).any():
         raise ValueError("Labels in `y` should be in the range [0, num_classes - 1].")
@@ -26,33 +38,47 @@ def clusters(
         mean0: tuple = (-3, -3),
         std1: float = 1.0,
         mean1: tuple = (3, 3),
-        dtype = torch.float32,
-        generator = None
+        dtype=torch.float32,
+        generator=None
 ):
     """
     Generate two distinct clusters of data for binary classification tasks.
 
-    :param int size: 
+    Parameters
+    ----------
+    size : int
         Number of points per cluster.
-    :param float std0: 
+    std0 : float, optional
         Standard deviation of the cluster for ``y=0``. Default is ``1.0``.
-    :param tuple mean0: 
+    mean0 : tuple, optional
         Mean (center) of the cluster for ``y=0``. Default is ``(-3, -3)``.
-    :param float std1: 
+    std1 : float, optional
         Standard deviation of the cluster for ``y=1``. Default is ``1.0``.
-    :param tuple mean1: 
+    mean1 : tuple, optional
         Mean (center) of the cluster for ``y=1``. Default is ``(3, 3)``.
-    :param torch.dtype dtype: 
+    dtype : torch.dtype, optional
         Data type of the output tensors. Default is ``torch.float32``.
-    :param torch.Generator generator: 
-        Random generator for reproducibility. Optional.
+    generator : torch.Generator, optional
+        Random generator for reproducibility. Default is ``None``.
 
-    :returns:
-        - **X** (*torch.Tensor*): Feature matrix of shape ``(2 * size, 2)`` containing the generated data points.
-        
-        - **y** (*torch.Tensor*): Binary labels of shape ``(2 * size,)`` corresponding to the data points.
+    Returns
+    -------
+    X : torch.Tensor
+        Feature matrix of shape ``(2 * size, 2)`` containing the generated data points.
+    y : torch.Tensor
+        Binary labels of shape ``(2 * size,)`` corresponding to the data points.
 
-    :rtype: Tuple[torch.Tensor, torch.Tensor]
+    Examples
+    --------
+    >>> X, y = clusters(size=100, std0=0.5, mean0=(-2, -2), std1=0.5, mean1=(2, 2))
+    >>> X.shape
+    torch.Size([200, 2])
+    >>> y.shape
+    torch.Size([200])
+    >>> y[:5]
+    tensor([0., 0., 0., 0., 0.])
+    >>> y[-5:]
+    tensor([1., 1., 1., 1., 1.])
     """
     # Cluster 0 (y = 0)
     X0 = torch.randn(size, 2, dtype=dtype, generator=generator) * std0 + torch.tensor(mean0, dtype=dtype)
