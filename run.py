@@ -63,26 +63,26 @@ print(
     sep="\n"
 )
 
-T = torch.tensor(np.linspace(X.min(), X.max(), SIZE).reshape(SIZE, 1), dtype=DTYPE, device=DEVICE)
-T = torch.cat([T, T], dim=1)
+T = torch.linspace(X.min(), X.max(), SIZE, dtype=DTYPE, device=DEVICE).reshape(SIZE, 1)
 
-with torch.no_grad():
-    yT = Model(T)
+slope = -Model.w[0] / Model.w[1]
+interc = -Model.b / Model.w[1]
+boundary = slope * T + interc
 
 plt.scatter(X[y == 0][:, 0], X[y == 0][:, 1], marker='x', label='Cluster y = 0', s=20)
 plt.scatter(X[y == 1][:, 0], X[y == 1][:, 1], marker='+', label='Cluster y = 1', s=40)
 # Decision Boundary
 plt.plot(
-    T[:, 1].cpu(),
-    yT.cpu(),
+    T.detach().cpu(),
+    boundary.detach().cpu(),
     alpha=.5,
     color='black',
     linestyle='--',
     label="Boundary"
 );
 
-plt.xlabel("Features");
-plt.ylabel("Target/Label");
+plt.xlabel('Feature 1')
+plt.ylabel('Feature 2')
 plt.title("Generated Data");
 plt.legend(loc='best');
 plt.show();
