@@ -305,8 +305,7 @@ class LogisticRegression(LinearRegression):
     -------
     forward(X: Tensor) -> Tensor
         Performs a forward pass and outputs probabilities.
-    """
-    
+    """ 
     def __init__(self, in_dims: int, out_dims: int = 1):
         """
         Initializes the LogisticRegression model with random weights and bias.
@@ -336,3 +335,50 @@ class LogisticRegression(LinearRegression):
             represents the probability of the positive class for binary classification.
         """
         return torch.sigmoid(super().forward(X))
+
+# TODO: Update code for the `MultinomialLogisticRegression` class
+class MultinomialLogisticRegression(LinearRegression):
+    """
+    A simple multinomial logistic regression model implemented with PyTorch, inheriting from the `LinearRegression` class.
+
+    Attributes
+    ----------
+    w : Tensor
+        Weights of the logistic regression model.
+    b : Tensor
+        Bias term of the logistic regression model.
+
+    Methods
+    -------
+    forward(X: Tensor) -> Tensor
+        Performs a forward pass and outputs probabilities on belonging to a class from set of classes.
+    """ 
+    def __init__(self, in_dims, out_dims = 1):
+        """
+        Initializes the MultinomialLogisticRegression model with random weights and bias.
+
+        Parameters
+        ----------
+        in_dims : int
+            Number of input features (dimension of the input).
+        out_dims : int, optional
+            Number of output features (usually 1 for binary classification). Default is 1.
+        """
+        super().__init__(in_dims, out_dims)
+
+    def forward(self, X):
+        """
+        Performs the forward pass through the multinomial logistic regression model.
+
+        Parameters
+        ----------
+        X : Tensor
+            Input tensor of shape (batch_size, in_dims).
+
+        Returns
+        -------
+        Tensor
+            Predicted probabilities of shape (batch_size, out_dims), where each element 
+            represents the probability of the positive class for binary classification.
+        """
+        return torch.softmax(super().forward(X))
