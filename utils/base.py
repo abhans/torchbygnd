@@ -300,13 +300,15 @@ class LogisticRegression(LinearRegression):
         Weights of the logistic regression model.
     b : Tensor
         Bias term of the logistic regression model.
+    multinomial : bool
+        Indicates whether the model is for binary or multinomial classification.
 
     Methods
     -------
     forward(X: Tensor) -> Tensor
         Performs a forward pass and outputs probabilities.
     """ 
-    def __init__(self, in_dims: int, out_dims: int = 1):
+    def __init__(self, in_dims: int, out_dims: int = 1, multinomial: bool = False):
         """
         Initializes the LogisticRegression model with random weights and bias.
 
@@ -315,8 +317,16 @@ class LogisticRegression(LinearRegression):
         in_dims : int
             Number of input features (dimension of the input).
         out_dims : int, optional
-            Number of output features (usually 1 for binary classification). Default is 1.
+            Number of output features. For binary classification, this is usually 1. Default is 1.
+        multinomial : bool
+            Indicates whether the model is for binary or multinomial classification.
         """
+        if multinomial and out_dims < 2:
+            raise ValueError("For multinomial classification, out_dims must be at least 2.")
+        if not multinomial and out_dims != 1:
+            raise ValueError("For binary classification, out_dims must be 1.")
+        
+        self.multinomial = multinomial
         super().__init__(in_dims, out_dims)
 
     def forward(self, X: Tensor) -> Tensor:
@@ -331,54 +341,13 @@ class LogisticRegression(LinearRegression):
         Returns
         -------
         Tensor
-            Predicted probabilities of shape (batch_size, out_dims), where each element 
-            represents the probability of the positive class for binary classification.
+            Predicted probabilities:
+            - For binary classification, shape is (batch_size, 1), with probabilities for the positive class.
+            - For multinomial classification, shape is (batch_size, out_dims), with probabilities over all classes.
         """
-        return torch.sigmoid(super().forward(X))
+        logits = super().forward(X)
 
-# TODO: Update code for the `MultinomialLogisticRegression` class
-class MultinomialLogisticRegression(LinearRegression):
-    """
-    A simple multinomial logistic regression model implemented with PyTorch, inheriting from the `LinearRegression` class.
-
-    Attributes
-    ----------
-    w : Tensor
-        Weights of the logistic regression model.
-    b : Tensor
-        Bias term of the logistic regression model.
-
-    Methods
-    -------
-    forward(X: Tensor) -> Tensor
-        Performs a forward pass and outputs probabilities on belonging to a class from set of classes.
-    """ 
-    def __init__(self, in_dims, out_dims = 1):
-        """
-        Initializes the MultinomialLogisticRegression model with random weights and bias.
-
-        Parameters
-        ----------
-        in_dims : int
-            Number of input features (dimension of the input).
-        out_dims : int, optional
-            Number of output features (usually 1 for binary classification). Default is 1.
-        """
-        super().__init__(in_dims, out_dims)
-
-    def forward(self, X):
-        """
-        Performs the forward pass through the multinomial logistic regression model.
-
-        Parameters
-        ----------
-        X : Tensor
-            Input tensor of shape (batch_size, in_dims).
-
-        Returns
-        -------
-        Tensor
-            Predicted probabilities of shape (batch_size, out_dims), where each element 
-            represents the probability of the positive class for binary classification.
-        """
-        return torch.softmax(super().forward(X))
+        if self.multinomial:
+            return torch.softmax(logits, dim=1)  # Normalize along the class dimension
+        
+        return torch.sigmoid(logits)
