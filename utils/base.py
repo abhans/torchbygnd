@@ -1,4 +1,5 @@
 import torch
+from tqdm import tqdm
 import numpy as np
 from torch import nn
 from torch.utils.data import (Dataset, DataLoader)
@@ -180,13 +181,14 @@ class Trainer:
             self.model.train()  # Set the model to training mode
             total_loss = 0
 
-            for batch in self.train_loader:
+            for batch in tqdm(self.train_loader, desc = f'Epoch {epoch + 1} / {num_epochs}'):
                 inputs, targets = batch
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
 
                 # Forward pass
                 predictions = self.model(inputs)
-                loss = self.criterion(predictions, targets)
+
+                loss = self.criterion(predictions.squeeze(), targets)
 
                 # Backward pass and optimization
                 self.optimizer.zero_grad()
@@ -194,13 +196,10 @@ class Trainer:
 
                 self.optimizer.step()
 
-                print(f'\tEpoch {epoch + 1} | Weights: {self.model.w.data}')
-                print(f'\tEpoch {epoch + 1} | Bias: {self.model.b.data}')
-
                 total_loss += loss.item()
 
             avg_loss = total_loss / len(self.train_loader)
-            print(f'Epoch {epoch + 1}/{num_epochs} | Loss: {avg_loss:.4f}')
+            print(f'Loss: {avg_loss:.4f}')
 
             self.trainLoss[epoch] = avg_loss
 
@@ -232,7 +231,7 @@ class Trainer:
 
                 # Forward pass
                 outputs = self.model(inputs)
-                val_loss = self.criterion(outputs, targets)
+                val_loss = self.criterion(outputs.squeeze(), targets)
 
                 total_val_loss += val_loss.item()
 
@@ -271,8 +270,7 @@ class LinearRegression(Module):
         """
         super(LinearRegression, self).__init__()
 
-        self.w = nn.Parameter(torch.randn(in_dims, out_dims).squeeze())
-        self.b = nn.Parameter(torch.randn(out_dims))
+        self.linear = nn.Linear(in_dims, out_dims, bias=True)
 
     def forward(self, X: Tensor) -> Tensor:
         """
@@ -288,7 +286,7 @@ class LinearRegression(Module):
         torch.Tensor
             Predicted output tensor of shape (batch_size, out_dims).
         """
-        return torch.matmul(X, self.w) + self.b
+        return self.linear(X)
 
 class LogisticRegression(LinearRegression):
     """
