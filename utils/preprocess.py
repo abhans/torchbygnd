@@ -33,29 +33,25 @@ def categorical(y: Tensor, num_classes: int) -> Tensor:
     return torch.eye(num_classes, dtype=torch.float32)[y]
 
 def clusters(
-        size: int,
-        std0: float = 1.0,
-        mean0: tuple = (-3, -3),
-        std1: float = 1.0,
-        mean1: tuple = (3, 3),
-        dtype=torch.float32,
-        generator=None
+    size: int,
+    means: list = [(-3, -3), (3, 3)],
+    stds: list = [1.0, 1.0],
+    dtype=torch.float32,
+    generator=None,
 ):
     """
-    Generate two distinct clusters of data for binary classification tasks.
+    Generate multiple distinct clusters of data for multinomial classification tasks.
 
     Parameters
     ----------
     size : int
         Number of points per cluster.
-    std0 : float, optional
-        Standard deviation of the cluster for ``y=0``. Default is ``1.0``.
-    mean0 : tuple, optional
-        Mean (center) of the cluster for ``y=0``. Default is ``(-3, -3)``.
-    std1 : float, optional
-        Standard deviation of the cluster for ``y=1``. Default is ``1.0``.
-    mean1 : tuple, optional
-        Mean (center) of the cluster for ``y=1``. Default is ``(3, 3)``.
+    means : list of tuples, optional
+        A list of tuples representing the means (centers) for each cluster.
+        Default is ``[(-3, -3), (3, 3)]`` for two clusters.
+    stds : list of floats, optional
+        A list of standard deviations for each cluster. Must match the length of ``means``.
+        Default is ``[1.0, 1.0]``.
     dtype : torch.dtype, optional
         Data type of the output tensors. Default is ``torch.float32``.
     generator : torch.Generator, optional
@@ -64,31 +60,35 @@ def clusters(
     Returns
     -------
     X : torch.Tensor
-        Feature matrix of shape ``(2 * size, 2)`` containing the generated data points.
+        Feature matrix of shape ``(len(means) * size, 2)`` containing the generated data points.
     y : torch.Tensor
-        Binary labels of shape ``(2 * size,)`` corresponding to the data points.
+        Labels of shape ``(len(means) * size,)`` corresponding to the cluster indices.
 
     Examples
     --------
-    >>> X, y = clusters(size=100, std0=0.5, mean0=(-2, -2), std1=0.5, mean1=(2, 2))
+    >>> X, y = clusters(size=100, means=[(-3, -3), (3, 3), (0, 0)], stds=[0.5, 0.5, 1.0])
     >>> X.shape
-    torch.Size([200, 2])
+    torch.Size([300, 2])
     >>> y.shape
-    torch.Size([200])
+    torch.Size([300])
     >>> y[:5]
     tensor([0., 0., 0., 0., 0.])
     >>> y[-5:]
-    tensor([1., 1., 1., 1., 1.])
+    tensor([2., 2., 2., 2., 2.])
     """
-    # Cluster 0 (y = 0)
-    X0 = torch.randn(size, 2, dtype=dtype, generator=generator) * std0 + torch.tensor(mean0, dtype=dtype)
-    y0 = torch.zeros(size, dtype=dtype)  # Labels for cluster 0
+    if len(means) != len(stds):
+        raise ValueError("The number of means must match the number of standard deviations.")
+    
+    Xs: list = []
+    ys: list = []
 
-    # Cluster 1 (y = 1)
-    X1 = torch.randn(size, 2, dtype=dtype, generator=generator) * std1 + torch.tensor(mean1, dtype=dtype)
-    y1 = torch.ones(size, dtype=dtype)  # Labels for cluster 1
+    for idx, (mean, std) in enumerate(zip(means, stds)):
+        X = torch.randn(size, 2, dtype=dtype, generator=generator) * std + torch.tensor(mean, dtype=dtype)
+        y = torch.full((size,), idx, dtype=dtype)       # Assign cluster label `idx` to all points in this cluster
+        Xs.append(X)
+        ys.append(y)
 
-    X = torch.cat([X0, X1], dim=0)
-    y = torch.cat([y0, y1], dim=0)
+    X = torch.cat(Xs, dim=0)
+    y = torch.cat(ys, dim=0)
 
     return X, y

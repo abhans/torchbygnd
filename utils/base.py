@@ -181,14 +181,14 @@ class Trainer:
             self.model.train()  # Set the model to training mode
             total_loss = 0
 
-            for batch in tqdm(self.train_loader, desc = f'Epoch {epoch + 1} / {num_epochs}'):
+            for batch in tqdm(self.train_loader, desc = f'Epoch {epoch + 1} / {num_epochs}\r'):
                 inputs, targets = batch
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
 
                 # Forward pass
                 predictions = self.model(inputs)
 
-                loss = self.criterion(predictions.squeeze(), targets)
+                loss = self.criterion(predictions, targets)
 
                 # Backward pass and optimization
                 self.optimizer.zero_grad()
