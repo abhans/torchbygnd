@@ -2,7 +2,7 @@ import torch
 from torch import Tensor
 
 # Function Definitions
-def categorical(y: Tensor, num_classes: int) -> Tensor:
+def onehot(y: Tensor, num_classes: int) -> Tensor:
     """
     Converts integer labels to one-hot encoded format.
 

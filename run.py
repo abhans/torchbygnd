@@ -17,7 +17,7 @@ from utils.base import (
 )
 
 # User-defined functions
-from utils.preprocess import clusters
+from utils.preprocess import clusters, onehot
 
 # Plotting
 import matplotlib.pyplot as plt
@@ -35,54 +35,52 @@ GENERATOR = torch.Generator().manual_seed(42)
 
 print(f"Device has ben set to: {torch.cuda.get_device_properties(DEVICE).name}")
 
-X, y = clusters(SIZE, std0 = 1.3, std1 = 1.6, generator=GENERATOR);
+X, y = clusters(SIZE, means=[(-3, -3), (2, 2), (-2, 2)], stds=[0.8, 0.6, 0.7])
 
-Data = TensorDataset(X, y)
+y_encoded = onehot(y.int(), 3)
 
-Model = LogisticRegression(in_dims=2).to(DEVICE)
+Data = TensorDataset(X, y_encoded)
+
+Model = LogisticRegression(in_dims=2, out_dims=3, multinomial=True).to(DEVICE)
 
 trainData, valData = random_split(Data, (0.8, 0.2), generator=GENERATOR)
 
-trainLoader = DataLoader(trainData, batch_size=BATCH_SIZE, shuffle=True)
-valLoader = DataLoader(valData, batch_size=BATCH_SIZE, shuffle=True)
+trainLoader = DataLoader(trainData, batch_size=BATCH_SIZE, generator=GENERATOR, shuffle=True)
+valLoader = DataLoader(valData, batch_size=BATCH_SIZE, generator=GENERATOR, shuffle=True)
 
 trainer = Trainer(
     Model,
     trainLoader,
     valLoader,
     optimizer=optim.SGD(Model.parameters(), lr=.1),
-    criterion=nn.BCELoss(reduction='mean'),        # Binary Cross-entropy Loss (For classification)
+    criterion=nn.CrossEntropyLoss(reduction='mean'),        # Cross-entropy Loss (For classification)
     device=DEVICE
 )
 
 train_loss, val_loss = trainer.train(num_epochs=NUM_EPOCHS)
 
-print(
-    f"Trained Weights: {Model.w.data}",
-    f"Trained Bias: {Model.b.data}",
-    sep="\n"
-)
+weights = Model.linear.weight.detach().cpu().numpy()
+biases = Model.linear.bias.detach().cpu().numpy()
 
-T = torch.tensor(np.linspace(X.min(), X.max(), SIZE).reshape(SIZE, 1), dtype=DTYPE, device=DEVICE)
-T = torch.cat([T, T], dim=1)
+Xmin, Xmax = X[:, 0].min() - .5, X[:, 0].max() + .5
+ymin, ymax = X[:, 1].min() - .5, X[:, 1].max() + .5
 
-with torch.no_grad():
-    yT = Model(T)
+# Meshgrid for Probability MApping
+xx, yy = np.meshgrid(np.linspace(Xmin, Xmax, SIZE), np.linspace(ymin, ymax, SIZE))
+grid = np.c_[xx.flatten(), yy.flatten()]
+
+scores = grid @ weights.T + biases
+
+predicted_classes = np.argmax(scores, axis=1).reshape(xx.shape)
 
 plt.scatter(X[y == 0][:, 0], X[y == 0][:, 1], marker='x', label='Cluster y = 0', s=20)
 plt.scatter(X[y == 1][:, 0], X[y == 1][:, 1], marker='+', label='Cluster y = 1', s=40)
-# Decision Boundary
-plt.plot(
-    T[:, 1].cpu(),
-    yT.cpu(),
-    alpha=.5,
-    color='black',
-    linestyle='--',
-    label="Boundary"
-);
+plt.scatter(X[y == 2][:, 0], X[y == 2][:, 1], marker='o', label='Cluster y = 2', s=20)
 
-plt.xlabel("Features");
-plt.ylabel("Target/Label");
-plt.title("Generated Data");
-plt.legend(loc='best');
+plt.contourf(xx, yy, predicted_classes, alpha=0.2, cmap=plt.cm.coolwarm)
+
+plt.xlabel('Feature 1')
+plt.ylabel('Feature 2')
+plt.title("Multinomial Classification Results");
+plt.legend(loc='lower right');
 plt.show();
