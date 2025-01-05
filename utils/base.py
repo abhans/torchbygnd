@@ -106,53 +106,18 @@ class CustomDataset(Dataset):
 class Trainer:
     """
     Custom trainer class for training and validating a PyTorch model.
-
-    Attributes
-    ----------
-    model : torch.nn.Module
-        The model to be trained.
-    train_loader : torch.utils.data.DataLoader
-        DataLoader for training data.
-    val_loader : torch.utils.data.DataLoader
-        DataLoader for validation data.
-    optimizer : torch.optim.Optimizer
-        Optimizer for updating the model parameters.
-    criterion : torch.nn.Module
-        Loss function to be used during training and validation.
-    device : torch.device
-        The device on which the model and data are placed (e.g., 'cpu', 'cuda').
-    trainLoss : dict[int, float]
-        Dictionary that stores the average training loss for each epoch.
-    valLoss : dict[int, float]
-        Dictionary that stores the average validation loss for each epoch.
     """
-
-    def __init__(
-        self,
-        model: nn.Module,
-        train_loader: DataLoader,
-        val_loader: DataLoader,
-        optimizer: Optimizer,
-        criterion: nn.Module,
-        device: Union[torch.device, str]
-    ) -> None:
+    def __init__(self, model, train_loader, val_loader, optimizer, criterion, device):
         """
         Initializes the Trainer class.
 
-        Parameters
-        ----------
-        model : torch.nn.Module
-            The PyTorch model to be trained.
-        train_loader : torch.utils.data.DataLoader
-            DataLoader for the training dataset.
-        val_loader : torch.utils.data.DataLoader
-            DataLoader for the validation dataset.
-        optimizer : torch.optim.Optimizer
-            Optimizer for the training process (e.g., Adam, SGD).
-        criterion : torch.nn.Module
-            Loss function (e.g., CrossEntropyLoss) for calculating the loss.
-        device : torch.device or str
-            Device to run the computations (either 'cpu' or 'cuda').
+        Args:
+            model (torch.nn.Module): The PyTorch model to be trained.
+            train_loader (torch.utils.data.DataLoader): DataLoader for the training dataset.
+            val_loader (torch.utils.data.DataLoader): DataLoader for the validation dataset.
+            optimizer (torch.optim.Optimizer): Optimizer for the training process (e.g., Adam, SGD).
+            criterion (torch.nn.Module): Loss function for calculating the loss.
+            device (torch.device): Device to run the computations (either 'cpu' or 'cuda').
         """
         self.model = model
         self.train_loader = train_loader
@@ -160,85 +125,79 @@ class Trainer:
         self.optimizer = optimizer
         self.criterion = criterion
         self.device = device
-        self.trainLoss: Dict[int, float] = {}
-        self.valLoss: Dict[int, float] = {}
+        self.trainLoss = {}
+        self.valLoss = {}
 
-    def train(self, num_epochs: int) -> Tuple[Dict[int, float], Dict[int, float]]:
+    def train(self, num_epochs):
         """
-        Trains the model for a given number of epochs.
+        Trains the model for a given number of epochs with a single progress bar.
 
-        Parameters
-        ----------
-        num_epochs : int
-            The number of epochs to train the model.
-
-        Returns
-        -------
-        tuple[dict[int, float], dict[int, float]]
-            A tuple containing two dictionaries: training loss and validation loss for each epoch.
+        Args:
+            num_epochs (int): Number of epochs to train the model.
         """
-        for epoch in range(num_epochs):
-            self.model.train()  # Set the model to training mode
+        # Create a single progress bar for all epochs
+        progress_bar = tqdm(total=num_epochs, desc="Training Progress", position=0, leave=True)
+
+        for epoch in range(1, num_epochs + 1):
+            # Set the model to training mode
+            self.model.train()
             total_loss = 0
 
-            for batch in tqdm(self.train_loader, desc = f'Epoch {epoch + 1} / {num_epochs}\r'):
+            for batch in self.train_loader:
                 inputs, targets = batch
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
 
                 # Forward pass
                 predictions = self.model(inputs)
-
                 loss = self.criterion(predictions, targets)
 
                 # Backward pass and optimization
                 self.optimizer.zero_grad()
                 loss.backward()
-
                 self.optimizer.step()
 
                 total_loss += loss.item()
 
             avg_loss = total_loss / len(self.train_loader)
-            print(f'Loss: {avg_loss:.4f}')
-
             self.trainLoss[epoch] = avg_loss
 
-            # Call the validation step after each epoch
-            self.validate(epoch)
+            # Validation step
+            val_loss = self.validate(epoch)
+            self.valLoss[epoch] = val_loss
 
+            # Update the progress bar with epoch number and losses
+            progress_bar.set_description(f"Epoch {epoch}/{num_epochs} | Train Loss: {avg_loss:.4f} | Val Loss: {val_loss:.4f}")
+            progress_bar.update(1)
+
+        progress_bar.close()
         return self.trainLoss, self.valLoss
 
-    def validate(self, epoch: int) -> None:
+    def validate(self, epoch):
         """
         Validates the model after each epoch.
 
-        Parameters
-        ----------
-        epoch : int
-            The current epoch number to store validation loss.
+        Args:
+            epoch (int): The current epoch number.
 
-        Returns
-        -------
-        None
+        Returns:
+            float: Average validation loss for the epoch.
         """
-        self.model.eval()  # Set the model to evaluation mode
+        self.model.eval()
         total_val_loss = 0
 
-        with torch.no_grad():  # No need to compute gradients during validation
+        with torch.no_grad():
             for batch in self.val_loader:
                 inputs, targets = batch
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
 
                 # Forward pass
                 outputs = self.model(inputs)
-                val_loss = self.criterion(outputs.squeeze(), targets)
-
+                val_loss = self.criterion(outputs, targets)
                 total_val_loss += val_loss.item()
 
-        avg_val_loss = total_val_loss / len(self.val_loader)  # Calculate the average validation loss
-        print(f'\t| Validation Loss: {avg_val_loss:.4f}\n')
+        avg_val_loss = total_val_loss / len(self.val_loader)
+        return avg_val_loss
 
-        self.valLoss[epoch] = avg_val_loss
 class LinearRegression(Module):
     """
     A simple linear regression model implemented with PyTorch.
