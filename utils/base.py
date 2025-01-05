@@ -239,7 +239,6 @@ class Trainer:
         print(f'\t| Validation Loss: {avg_val_loss:.4f}\n')
 
         self.valLoss[epoch] = avg_val_loss
-
 class LinearRegression(Module):
     """
     A simple linear regression model implemented with PyTorch.
@@ -349,3 +348,29 @@ class LogisticRegression(LinearRegression):
             return torch.softmax(logits, dim=1)  # Normalize along the class dimension
         
         return torch.sigmoid(logits)
+    
+class LinearSVM(LinearRegression):
+    def __init__(self, in_dims: int) -> None:
+        super().__init__(in_dims)
+
+    def forward(self, X: torch.Tensor) -> Tensor:
+        return super().forward(X)
+
+    def hinge_loss(self, y_pred: Tensor, y_true: Tensor) -> Tensor:
+        """
+        Computes the hinge loss.
+        
+        Parameters
+        ----------
+        y_pred : torch.Tensor
+            Predicted values from the model.
+        
+        y_true : torch.Tensor
+            True labels (+1 or -1).
+
+        Returns
+        -------
+        torch.Tensor
+            Computed hinge loss.
+        """
+        return torch.mean(torch.clamp(1 - y_pred * y_true, min=0))
