@@ -1,8 +1,7 @@
 import torch
-from torch import Tensor
 
 # Function Definitions
-def onehot(y: Tensor, num_classes: int) -> Tensor:
+def onehot(y: torch.Tensor, num_classes: int) -> torch.Tensor:
     """
     Converts integer labels to one-hot encoded format.
 
