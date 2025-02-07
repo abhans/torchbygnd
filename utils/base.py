@@ -135,7 +135,6 @@ class Trainer:
         Args:
             num_epochs (int): Number of epochs to train the model.
         """
-        # Create a single progress bar for all epochs
         progress_bar = tqdm(total=num_epochs, desc="Training Progress", position=0, leave=True)
 
         for epoch in range(1, num_epochs + 1):
@@ -165,7 +164,6 @@ class Trainer:
             val_loss = self.validate(epoch)
             self.valLoss[epoch] = val_loss
 
-            # Update the progress bar with epoch number and losses
             progress_bar.set_description(f"Epoch {epoch}/{num_epochs} | Train Loss: {avg_loss:.4f} | Val Loss: {val_loss:.4f}")
             progress_bar.update(1)
 
@@ -309,27 +307,40 @@ class LogisticRegression(LinearRegression):
         return torch.sigmoid(logits)
     
 class LinearSVM(LinearRegression):
-    def __init__(self, in_dims: int) -> None:
+    def __init__(self, in_dims: int, is_soft: bool = False, C: float = 1.0) -> None:
         super().__init__(in_dims)
+        self.is_soft = is_soft
+        self.C = C
 
     def forward(self, X: torch.Tensor) -> Tensor:
         return super().forward(X)
+    
+    def loss(self, outputs: Tensor, targets: Tensor) -> Tensor:
+        r"""
+        Computes the SVM hinge loss with optional soft-margin regularization.
 
-    def hinge_loss(self, y_pred: Tensor, y_true: Tensor) -> Tensor:
-        """
-        Computes the hinge loss.
+        The hinge loss is defined as:
+        l(ŷ) = max(0, 1 - y * (w^T x + b))
         
+        For samples on the wrong side of the margin, the loss is proportional to the distance
+        from the margin. When is_soft is True, a regularization term on the weight vector is added.
+
         Parameters
         ----------
-        y_pred : torch.Tensor
-            Predicted values from the model.
-        
-        y_true : torch.Tensor
-            True labels (+1 or -1).
+        outputs : torch.Tensor
+            Raw outputs from the model (w^T x + b), shape (batch_size, 1).
+        targets : torch.Tensor
+            Ground truth labels, expected to be in {-1, 1}, shape (batch_size, 1).
 
         Returns
         -------
         torch.Tensor
-            Computed hinge loss.
+            The computed SVM loss.
         """
-        return torch.mean(torch.clamp(1 - y_pred * y_true, min=0))
+        hinge_loss = torch.mean(torch.clamp(1 - targets * outputs, min=0))
+
+        if self.is_soft:
+            reg_loss = torch.norm(self.linear.weight) ** 2
+            return hinge_loss + self.C * reg_loss
+        else:
+            return hinge_loss

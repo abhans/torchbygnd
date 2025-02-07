@@ -11,7 +11,6 @@ import numpy as np
 
 # User-defined classes
 from utils.base import (
-    # LinearRegression,
     LogisticRegression,
     Trainer
 )
@@ -35,12 +34,14 @@ GENERATOR = torch.Generator().manual_seed(42)
 
 print(f"Device has ben set to: {torch.cuda.get_device_properties(DEVICE).name}")
 
+# Data Preparation
 X, y = clusters(SIZE, means=[(-3, -3), (2, 2), (-2, 2)], stds=[0.8, 0.6, 0.7])
 
 y_encoded = onehot(y.int(), 3)
 
 Data = TensorDataset(X, y_encoded)
 
+# Model Definition
 Model = LogisticRegression(in_dims=2, out_dims=3, multinomial=True).to(DEVICE)
 
 trainData, valData = random_split(Data, (0.8, 0.2), generator=GENERATOR)
@@ -48,6 +49,7 @@ trainData, valData = random_split(Data, (0.8, 0.2), generator=GENERATOR)
 trainLoader = DataLoader(trainData, batch_size=BATCH_SIZE, generator=GENERATOR, shuffle=True)
 valLoader = DataLoader(valData, batch_size=BATCH_SIZE, generator=GENERATOR, shuffle=True)
 
+# Training a Logistic Regression Model with `Trainer`
 trainer = Trainer(
     Model,
     trainLoader,
