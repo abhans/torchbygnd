@@ -341,6 +341,7 @@ class LinearSVM(LinearRegression):
 
         if self.is_soft:
             reg_loss = torch.norm(self.linear.weight) ** 2
+            # Return the regularized loss
             return hinge_loss + self.C * reg_loss
         else:
             return hinge_loss
