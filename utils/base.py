@@ -112,12 +112,12 @@ class Trainer:
         Initializes the Trainer class.
 
         Args:
-            model (torch.nn.Module): The PyTorch model to be trained.
-            train_loader (torch.utils.data.DataLoader): DataLoader for the training dataset.
-            val_loader (torch.utils.data.DataLoader): DataLoader for the validation dataset.
-            optimizer (torch.optim.Optimizer): Optimizer for the training process (e.g., Adam, SGD).
-            criterion (torch.nn.Module): Loss function for calculating the loss.
-            device (torch.device): Device to run the computations (either 'cpu' or 'cuda').
+            model (`torch.nn.Module`): The PyTorch model to be trained.
+            train_loader (`torch.utils.data.DataLoader`): DataLoader for the training dataset.
+            val_loader (`torch.utils.data.DataLoader`): DataLoader for the validation dataset.
+            optimizer (`torch.optim.Optimizer`): Optimizer for the training process (e.g., Adam, SGD).
+            criterion (`torch.nn.Module`): Loss function for calculating the loss.
+            device (`torch.device`): Device to run the computations (either 'cpu' or 'cuda').
         """
         self.model = model
         self.train_loader = train_loader
@@ -250,16 +250,16 @@ class LogisticRegression(LinearRegression):
 
     Attributes
     ----------
-    w : Tensor
+    w : `Tensor`
         Weights of the logistic regression model.
-    b : Tensor
+    b : `Tensor`
         Bias term of the logistic regression model.
-    multinomial : bool
+    multinomial : `bool`
         Indicates whether the model is for binary or multinomial classification.
 
     Methods
     -------
-    forward(X: Tensor) -> Tensor
+    forward(X: `Tensor`) -> `Tensor`
         Performs a forward pass and outputs probabilities.
     """ 
     def __init__(self, in_dims: int, out_dims: int = 1, multinomial: bool = False):
@@ -268,11 +268,11 @@ class LogisticRegression(LinearRegression):
 
         Parameters
         ----------
-        in_dims : int
+        in_dims : `int`
             Number of input features (dimension of the input).
-        out_dims : int, optional
+        out_dims : `int`, `optional`
             Number of output features. For binary classification, this is usually 1. Default is 1.
-        multinomial : bool
+        multinomial : `bool`
             Indicates whether the model is for binary or multinomial classification.
         """
         if multinomial and out_dims < 2:
@@ -289,12 +289,12 @@ class LogisticRegression(LinearRegression):
 
         Parameters
         ----------
-        X : Tensor
+        X : `Tensor`
             Input tensor of shape (batch_size, in_dims).
 
         Returns
         -------
-        Tensor
+        `Tensor`
             Predicted probabilities:
             - For binary classification, shape is (batch_size, 1), with probabilities for the positive class.
             - For multinomial classification, shape is (batch_size, out_dims), with probabilities over all classes.
@@ -327,6 +327,7 @@ class LinearSVM(LinearRegression):
 
         Parameters
         ----------
+<<<<<<< Updated upstream
         outputs : torch.Tensor
             Raw outputs from the model (w^T x + b), shape (batch_size, 1).
         targets : torch.Tensor
@@ -336,6 +337,18 @@ class LinearSVM(LinearRegression):
         -------
         torch.Tensor
             The computed SVM loss.
+=======
+        y_pred : `torch.Tensor`
+            Predicted values from the model.
+        
+        y_true : `torch.Tensor`
+            True labels (+1 or -1).
+
+        Returns
+        -------
+        `torch.Tensor`
+            Computed hinge loss.
+>>>>>>> Stashed changes
         """
         hinge_loss = torch.mean(torch.clamp(1 - targets * outputs, min=0))
 
