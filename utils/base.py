@@ -1,14 +1,10 @@
 import torch
 from tqdm import tqdm
-import numpy as np
-from torch import nn
-from torch.utils.data import (Dataset, DataLoader)
-from torch.optim import Optimizer
-from torch.nn import Module, Module as LossFunction
-from torch import Tensor
+from torch import (nn, Tensor)
+from torch.utils.data import (Dataset)
+from torch.nn import Module, Module
 
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+import torch.nn.functional as Func
 
 from typing import (
     Any,
@@ -17,7 +13,6 @@ from typing import (
     Optional,
     Tuple,
     Union,
-    Dict
 )
 
 class CustomDataset(Dataset):
@@ -148,7 +143,13 @@ class Trainer:
 
                 # Forward pass
                 predictions = self.model(inputs)
-                loss = self.criterion(predictions, targets)
+                
+                # For Hinge Loss
+                # TODO: Redundant and messy, find a more optimal solution 
+                if isinstance(self.criterion, HingeLoss):
+                    loss = self.criterion(predictions, targets, self.model)
+                else:
+                    loss = self.criterion(predictions, targets)
 
                 # Backward pass and optimization
                 self.optimizer.zero_grad()
@@ -190,7 +191,12 @@ class Trainer:
 
                 # Forward pass
                 outputs = self.model(inputs)
-                val_loss = self.criterion(outputs, targets)
+
+                if isinstance(self.criterion, HingeLoss):
+                    val_loss = self.criterion(outputs, targets, self.model)
+                else:
+                    val_loss = self.criterion(outputs, targets)
+
                 total_val_loss += val_loss.item()
 
         avg_val_loss = total_val_loss / len(self.val_loader)
@@ -307,41 +313,111 @@ class LogisticRegression(LinearRegression):
         return torch.sigmoid(logits)
     
 class LinearSVM(LinearRegression):
-    def __init__(self, in_dims: int, is_soft: bool = False, C: float = 1.0) -> None:
-        super().__init__(in_dims)
-        self.is_soft = is_soft
-        self.C = C
+    """
+    Linear Support Vector Machine (SVM) model.
 
-    def forward(self, X: torch.Tensor) -> Tensor:
-        return super().forward(X)
-    
-    def loss(self, outputs: Tensor, targets: Tensor) -> Tensor:
-        r"""
-        Computes the SVM hinge loss with optional soft-margin regularization.
+    This class implements a linear SVM using PyTorch. It supports both hard-margin
+    and soft-margin SVM, with an option to control the regularization strength.
 
-        The hinge loss is defined as:
-        l(ŷ) = max(0, 1 - y * (w^T x + b))
-        
-        For samples on the wrong side of the margin, the loss is proportional to the distance
-        from the margin. When is_soft is True, a regularization term on the weight vector is added.
+    Methods
+    -------
+    `forward(X: torch.Tensor) -> torch.Tensor`
+        Performs a forward pass (predicts the output for input X).
+    """
+    def __init__(self, in_dims: int) -> None:
+        """
+        Initializes the LinearSVM model.
 
         Parameters
         ----------
-        outputs : torch.Tensor
-            Raw outputs from the model (w^T x + b), shape (batch_size, 1).
-        targets : torch.Tensor
-            Ground truth labels, expected to be in {-1, 1}, shape (batch_size, 1).
+        `in_dims` : int
+            Number of input features.
+        """
+        super().__init__(in_dims)
+
+    def forward(self, X: torch.Tensor) -> Tensor:
+        """
+        Performs the forward pass through the linear SVM model.
+
+        Parameters
+        ----------
+        X : torch.Tensor
+            Input tensor of shape (batch_size, in_dims).
 
         Returns
         -------
         torch.Tensor
-            The computed SVM loss.
+            Predicted output tensor of shape (batch_size, 1).
         """
-        hinge_loss = torch.mean(torch.clamp(1 - targets * outputs, min=0))
+        return super().forward(X)
+    
+class HingeLoss(Module):
+    """
+    Calculates the hinge loss for SVM.
+
+    Attributes
+    ----------
+    `reduction` : str, optional
+        Specifies the reduction to apply to the output:
+        'none' | 'mean' | 'sum'. 'none': no reduction will be applied,
+        'mean': the sum of the output will be divided by the number of
+        elements in the output, 'sum': the output will be summed.
+        Default: 'mean'
+    `is_soft` : bool, optional
+        Whether to use soft-margin SVM. Default is False.
+    `C` : float, optional
+        Regularization parameter (inverse of regularization strength). Used only when `is_soft` is True. Default is 1.0.
+    """
+    def __init__(self, reduction: str = 'mean', is_soft: bool = False, C: float = 1.0) -> None:
+        """
+        Initializes the HingeLoss module.
+
+        Parameters
+        ----------
+        `reduction` : str, optional
+            Specifies the reduction to apply to the output:
+            'none' | 'mean' | 'sum'. 'none': no reduction will be applied,
+            'mean': the sum of the output will be divided by the number of
+            elements in the output, 'sum': the output will be summed.
+            Default: 'mean'
+        `is_soft` : bool, optional
+            Whether to use soft-margin SVM. Default is False.
+        `C` : float, optional
+            Regularization parameter (inverse of regularization strength). Used only when `is_soft` is True. Default is 1.0.
+        """
+        super().__init__()
+        self.reduction = reduction
+        self.is_soft = is_soft
+        self.C = C
+
+    def forward(self, output: Tensor, target: Tensor, model: Module) -> Tensor:
+        """
+        Calculates the hinge loss.
+
+        Parameters
+        ----------
+        `output` : Tensor
+            The output from the model.
+        `target` : Tensor
+            The target values (should be 1 or -1).
+        `model` : Module
+            The SVM model to be trained
+        
+        Returns
+        -------
+        Tensor
+            The calculated hinge loss.
+        """
+        loss = torch.mean(Func.relu(1 - target * output))
 
         if self.is_soft:
-            reg_loss = torch.norm(self.linear.weight) ** 2
-            # Return the regularized loss
-            return hinge_loss + self.C * reg_loss
-        else:
-            return hinge_loss
+            # Regularization Term
+            loss += (1 / 2 * self.C) * torch.sum(torch.linalg.norm(model.linear.weight))
+
+        if self.reduction == 'sum':
+            loss = torch.sum(Func.relu(1 - target * output))
+        
+        elif self.reduction == 'none':
+            loss = Func.relu(1 - target * output)
+        
+        return loss
