@@ -35,11 +35,12 @@ def clusters(
     size: int,
     means: list = [(-3, -3), (3, 3)],
     stds: list = [1.0, 1.0],
+    labels: list = None,
     dtype=torch.float32,
     generator=None,
 ):
     """
-    Generate multiple distinct clusters of data for multinomial classification tasks.
+    Generate multiple distinct clusters of data for classification tasks.
 
     Parameters
     ----------
@@ -51,6 +52,9 @@ def clusters(
     stds : list of floats, optional
         A list of standard deviations for each cluster. Must match the length of ``means``.
         Default is ``[1.0, 1.0]``.
+    labels : list, optional
+        A list of labels for each cluster. Must match the length of ``means``.
+        If None, defaults to cluster indices (0, 1, 2, ...). Default is ``None``.
     dtype : torch.dtype, optional
         Data type of the output tensors. Default is ``torch.float32``.
     generator : torch.Generator, optional
@@ -65,25 +69,35 @@ def clusters(
 
     Examples
     --------
-    >>> X, y = clusters(size=100, means=[(-3, -3), (3, 3), (0, 0)], stds=[0.5, 0.5, 1.0])
+    >>> X, y = clusters(size=100, means=[(-3, -3), (3, 3)], stds=[0.5, 0.5], labels=[1, -1])
     >>> X.shape
-    torch.Size([300, 2])
+    torch.Size([200, 2])
     >>> y.shape
-    torch.Size([300])
+    torch.Size([200])
     >>> y[:5]
-    tensor([0., 0., 0., 0., 0.])
+    tensor([1., 1., 1., 1., 1.])
     >>> y[-5:]
-    tensor([2., 2., 2., 2., 2.])
+    tensor([-1., -1., -1., -1., -1.])
     """
     if len(means) != len(stds):
         raise ValueError("The number of means must match the number of standard deviations.")
-    
+
+    if labels is not None and len(means) != len(labels):
+        raise ValueError("The number of means must match the number of labels.")
+
     Xs: list = []
     ys: list = []
 
     for idx, (mean, std) in enumerate(zip(means, stds)):
         X = torch.randn(size, 2, dtype=dtype, generator=generator) * std + torch.tensor(mean, dtype=dtype)
-        y = torch.full((size,), idx, dtype=dtype)       # Assign cluster label `idx` to all points in this cluster
+        
+        # Assign labels from `labels`
+        if labels is None:
+            label = idx
+        else:
+            label = labels[idx]
+        
+        y = torch.full((size,), label, dtype=dtype)
         Xs.append(X)
         ys.append(y)
 
