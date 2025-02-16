@@ -98,6 +98,7 @@ def clusters(
             label = labels[idx]
         
         y = torch.full((size,), label, dtype=dtype)
+        
         Xs.append(X)
         ys.append(y)
 

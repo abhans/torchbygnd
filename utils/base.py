@@ -361,10 +361,10 @@ class HingeLoss(Module):
     ----------
     `reduction` : str, optional
         Specifies the reduction to apply to the output:
-        'none' | 'mean' | 'sum'. 'none': no reduction will be applied,
-        'mean': the sum of the output will be divided by the number of
-        elements in the output, 'sum': the output will be summed.
-        Default: 'mean'
+        `'none' | 'mean' | 'sum'`. `'none'`: no reduction will be applied,
+        `'mean'`: the sum of the output will be divided by the number of
+        elements in the output, `'sum'`: the output will be summed.
+        Default: `'mean'`
     `is_soft` : bool, optional
         Whether to use soft-margin SVM. Default is False.
     `C` : float, optional
@@ -409,7 +409,7 @@ class HingeLoss(Module):
             The calculated hinge loss.
         """
         loss = torch.mean(Func.relu(1 - target * output.squeeze()))
-        # For soft margin classification
+
         if self.is_soft:
             # Calculate regularization term
             reg_loss = 0.0
@@ -421,4 +421,5 @@ class HingeLoss(Module):
             loss = torch.sum(Func.relu(1 - target * output.squeeze()))
         elif self.reduction == 'none':
             loss = Func.relu(1 - target * output.squeeze())
+        
         return loss
