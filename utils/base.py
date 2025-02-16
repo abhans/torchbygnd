@@ -146,10 +146,10 @@ class Trainer:
                 
                 # For Hinge Loss
                 # TODO: Redundant and messy, find a more optimal solution 
-                # if isinstance(self.criterion, HingeLoss):
-                #     loss = self.criterion(predictions, targets, self.model)
-                # else:
-                loss = self.criterion(predictions, targets)
+                if isinstance(self.criterion, HingeLoss):
+                    loss = self.criterion(predictions, targets, self.model.linear.weight)
+                else:
+                    loss = self.criterion(predictions, targets)
 
                 # Backward pass and optimization
                 self.optimizer.zero_grad()
@@ -194,10 +194,10 @@ class Trainer:
 
                 # For Hinge Loss
                 # TODO: Redundant and messy, find a more optimal solution 
-                # if isinstance(self.criterion, HingeLoss):
-                #     val_loss = self.criterion(outputs, targets, self.model)
-                # else:
-                val_loss = self.criterion(outputs, targets)
+                if isinstance(self.criterion, HingeLoss):
+                    val_loss = self.criterion(outputs, targets, self.model.linear.weight)
+                else:
+                    val_loss = self.criterion(outputs, targets)
 
                 total_val_loss += val_loss.item()
 
@@ -392,7 +392,7 @@ class HingeLoss(Module):
         self.is_soft = is_soft
         self.C = C
 
-    def forward(self, output: Tensor, target: Tensor) -> Tensor:
+    def forward(self, output: Tensor, target: Tensor, weights: Optional[Tensor]) -> Tensor:
         """
         Calculates the hinge loss.
 
@@ -408,18 +408,22 @@ class HingeLoss(Module):
         Tensor
             The calculated hinge loss.
         """
-        loss = torch.mean(Func.relu(1 - target * output.squeeze()))
+        loss = Func.relu(1 - target * output.squeeze())
 
-        if self.is_soft:
-            # Calculate regularization term
-            reg_loss = 0.0
-            for param in self.parameters():
-                reg_loss += torch.linalg.norm(param)
-            loss += (self.C / 2) * reg_loss
-
-        if self.reduction == 'sum':
-            loss = torch.sum(Func.relu(1 - target * output.squeeze()))
-        elif self.reduction == 'none':
-            loss = Func.relu(1 - target * output.squeeze())
+        if self.reduction == 'mean':
+            hinge_loss = loss.mean()
+        elif self.reduction == 'sum':
+            hinge_loss = loss.sum()
+        else:
+            hinge_loss = loss    
         
-        return loss
+        if self.is_soft:
+            if weights is None:
+                raise ValueError("Weight must be provided for soft-margin classification!")            
+            # Calculate regularization term
+            reg_loss = 0.5 * torch.linalg.norm(weights) ** 2
+            total_loss = reg_loss + self.C * hinge_loss
+
+            return total_loss
+        
+        return hinge_loss
