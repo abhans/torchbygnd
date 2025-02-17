@@ -1,7 +1,7 @@
 import torch
 from tqdm import tqdm
 from torch import (nn, Tensor)
-from torch.utils.data import (Dataset)
+from torch.utils.data import (Dataset, DataLoader)
 from torch.nn import Module, Module
 
 import torch.nn.functional as Func
@@ -123,6 +123,36 @@ class Trainer:
         self.trainLoss = {}
         self.valLoss = {}
 
+    def __repr__(self) -> str:
+        """
+        Returns a string representation of the Trainer object,
+        including the model type, data loaders, optimizer, criterion, and device.
+        """
+        # Try to get the number of batches from the loaders if available.
+        try:
+            train_batches = len(self.train_loader)
+        except Exception:
+            train_batches = "N/A"
+        try:
+            val_batches = len(self.val_loader)
+        except Exception:
+            val_batches = "N/A"
+        
+        repr_str = (
+            f"{'Trainer'.center(40)}\n"
+            f"{'*===' * 10}\n"
+            f"*=> Model\n\t {self.model.__class__.__name__} ({self.model.__repr__()})\n"
+            f"*=> Train Loader\n\t {self.train_loader.__class__.__name__} with \"{train_batches}\" batches\n"
+            f"*=> Val Loader\n\t {self.val_loader.__class__.__name__} with \"{val_batches}\" batches\n"
+            f"*=> Optimizer\n\t {self.optimizer.__class__.__name__} ({self.optimizer.__repr__()})\n"
+            f"*=> Criterion\n\t {self.criterion.__repr__()}\n"
+            f"*=> Device\n\t {str(self.device).upper()}\n"
+            f")\n"
+            f"{'*===' * 10}\n"
+        )
+        return repr_str
+
+
     def train(self, num_epochs):
         """
         Trains the model for a given number of epochs with a single progress bar.
@@ -146,7 +176,7 @@ class Trainer:
                 
                 # For Hinge Loss
                 # TODO: Redundant and messy, find a more optimal solution 
-                if isinstance(self.criterion, HingeLoss):
+                if isinstance(self.criterion, Hinge):
                     loss = self.criterion(predictions, targets, self.model.linear.weight)
                 else:
                     loss = self.criterion(predictions, targets)
@@ -194,7 +224,7 @@ class Trainer:
 
                 # For Hinge Loss
                 # TODO: Redundant and messy, find a more optimal solution 
-                if isinstance(self.criterion, HingeLoss):
+                if isinstance(self.criterion, Hinge):
                     val_loss = self.criterion(outputs, targets, self.model.linear.weight)
                 else:
                     val_loss = self.criterion(outputs, targets)
@@ -353,7 +383,7 @@ class LinearSVM(LinearRegression):
         """
         return super().forward(X)
     
-class HingeLoss(Module):
+class Hinge(Module):
     """
     Calculates the hinge loss for SVM.
 
@@ -372,7 +402,7 @@ class HingeLoss(Module):
     """
     def __init__(self, reduction: str = 'mean', is_soft: bool = False, C: float = 1.0) -> None:
         """
-        Initializes the HingeLoss module.
+        Initializes the Hinge module.
 
         Parameters
         ----------
@@ -391,6 +421,18 @@ class HingeLoss(Module):
         self.reduction = reduction
         self.is_soft = is_soft
         self.C = C
+
+def __repr__(self) -> str:
+    """
+    Returns a string representation of the Hinge loss instance.
+
+    This representation includes the reduction method used, whether soft-margin SVM is enabled,
+    and the regularization parameter C.
+
+    Returns:
+        `str`: A formatted string representing the current state of the Hinge loss instance.
+    """
+    return f"Hinge(reduction: {self.reduction}, is_soft: {self.is_soft}, C: {self.C})"
 
     def forward(self, output: Tensor, target: Tensor, weights: Optional[Tensor]) -> Tensor:
         """
