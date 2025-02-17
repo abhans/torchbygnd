@@ -422,17 +422,17 @@ class Hinge(Module):
         self.is_soft = is_soft
         self.C = C
 
-def __repr__(self) -> str:
-    """
-    Returns a string representation of the Hinge loss instance.
+    def __repr__(self) -> str:
+        """
+        Returns a string representation of the Hinge loss instance.
 
-    This representation includes the reduction method used, whether soft-margin SVM is enabled,
-    and the regularization parameter C.
+        This representation includes the reduction method used, whether soft-margin SVM is enabled,
+        and the regularization parameter C.
 
-    Returns:
-        `str`: A formatted string representing the current state of the Hinge loss instance.
-    """
-    return f"Hinge(reduction: {self.reduction}, is_soft: {self.is_soft}, C: {self.C})"
+        Returns:
+            `str`: A formatted string representing the current state of the Hinge loss instance.
+        """
+        return f"Hinge(reduction: {self.reduction}, is_soft: {self.is_soft}, C: {self.C})"
 
     def forward(self, output: Tensor, target: Tensor, weights: Optional[Tensor]) -> Tensor:
         """
