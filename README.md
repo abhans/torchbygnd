@@ -7,7 +7,7 @@ As the time goes on, various information will be provided here.
 ## Topics Covered so Far
 1. Linear Regression
 2. Logistic Regression
-   2.1. Binary LogReg
-   2.2. Multinomial LogReg
+   - Binary LogReg
+   - Multinomial LogReg
 3. Support Vector Machines (SVMs)
 4. ...
