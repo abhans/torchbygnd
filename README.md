@@ -5,9 +5,9 @@ Series on popular deep learning framework `PyTorch` and effort to learn it from 
 As the time goes on, various information will be provided here.
 
 ## Topics Covered so Far
-1. Linear Regression
-2. Logistic Regression
+1. Linear Regression `LinearRegression`
+2. Logistic Regression `LogisticRegression`
    - Binary LogReg
    - Multinomial LogReg
-3. Support Vector Machines (SVMs)
+3. Support Vector Machines (SVMs) `LinearSVM`
 4. ...
