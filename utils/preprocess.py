@@ -1,4 +1,5 @@
 import torch
+from typing import (Optional, List)
 
 # Function Definitions
 def onehot(y: torch.Tensor, num_classes: int) -> torch.Tensor:
@@ -35,9 +36,9 @@ def clusters(
     size: int,
     means: list = [(-3, -3), (3, 3)],
     stds: list = [1.0, 1.0],
-    labels: list = None,
-    dtype=torch.float32,
-    generator=None,
+    labels: Optional[None | List[int]] = None,
+    dtype: torch.dtype = torch.float32,
+    generator: Optional[torch.Generator] = None,
 ):
     """
     Generate multiple distinct clusters of data for classification tasks.

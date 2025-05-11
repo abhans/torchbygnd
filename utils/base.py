@@ -1,10 +1,17 @@
+import os
+
 import torch
-from tqdm import tqdm
 from torch import (nn, Tensor)
 from torch.utils.data import (Dataset, DataLoader)
 from torch.nn import Module, Module
-
 import torch.nn.functional as Func
+
+import logging
+from logging import handlers
+
+from pathlib import Path
+
+from tqdm import tqdm
 
 from typing import (
     Any,
@@ -14,6 +21,72 @@ from typing import (
     Tuple,
     Union,
 )
+
+LIB: Path | str = Path(__file__).parent
+ROOT: Path | str = LIB.parent
+DATA_DIR: Path | str = ROOT / "data"
+TEST_DIR: Path | str = ROOT / "test"
+LOG_DIR: Path | str = ROOT / "logs"
+
+class BaseLogger(logging.Logger):
+    """
+    Base Logger class for logging, handling exceptions and configuration.
+
+    Parameters:
+        name (`str`): Name of the logger.
+        level (`int`): Logging level. Default is `logging.NOTSET`.
+    """
+    def __init__(self, name: str, level: int = logging.NOTSET):
+        super().__init__(name, level)
+        self._formatter = logging.Formatter(     # >>> 14:54:23 | INFO: BaseLogger @ config.py: Ln 48
+            ">>> %(asctime)s | %(levelname)s: %(msg)s -> %(name)s @ %(filename)s: Ln %(lineno)d",
+            datefmt="%H:%M:%S",
+        )
+        self._handler()
+
+    def _handler(self) -> None:
+        """
+        Set the handler for the logger. This is a "stream" handler that outputs to the console.
+        """
+        _handler = logging.StreamHandler()
+        _handler.setFormatter(self._formatter)
+
+        self.addHandler(_handler)
+
+
+class FileLogger(BaseLogger):
+    """
+    Logger that saves the logs to a set of files
+
+    Parameters:
+        name (`str`): Name of the logger.
+        filename (`str`): Name of the file to save the logs.
+        path (`str`): Path to the directory where the log file will be saved. Default is `'logs'` directory.
+        level (`int`): Logging level. Default is `logging.INFO`.
+        n_backup (`int`): Number of backup files to keep. Default is `0` (No rollover).
+    """
+    def __init__(self, name: str, filename: str, path: str | Path = LOG_DIR, level: int = logging.INFO, n_backup: int = 0):
+        self._filename = filename
+        self._path = path
+        self._n_backup = n_backup
+        # Rest of the parameters are passed to the parent class
+        super().__init__(name, level)
+        
+    def _handler(self) -> None:
+        """
+        Set the handler for the logger. This is a "file" handler that outputs to a file.
+        """
+        if not os.path.exists(self._path):
+            os.makedirs(self._path)
+        # Set the file handler with rotation
+        _file_handler = handlers.RotatingFileHandler(
+            filename=Path(self._path) / self._filename, 
+            maxBytes=1024,
+            backupCount=self._n_backup
+        )
+        _file_handler.setFormatter(self._formatter)
+        
+        self.addHandler(_file_handler)
 
 class CustomDataset(Dataset):
     """
@@ -96,7 +169,7 @@ class CustomDataset(Dataset):
         if self.transform:
             sample = self.transform(sample)
 
-        return (sample, label) if label is not None else sample
+        return (sample, label) if label is not None else (sample, None)
 
 class Trainer:
     """
@@ -139,7 +212,7 @@ class Trainer:
             val_batches = "N/A"
         
         repr_str = (
-            f"{'Trainer'.center(40)}\n"
+            f"{'T R A I N E R'.center(40)}\n"
             f"{'*===' * 10}\n"
             f"*=> Model\n\t {self.model.__class__.__name__} ({self.model.__repr__()})\n"
             f"*=> Train Loader\n\t {self.train_loader.__class__.__name__} with \"{train_batches}\" batches\n"

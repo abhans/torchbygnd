@@ -1,0 +1,11 @@
+>>> 19:23:03 | INFO: Device has ben set to: NVIDIA GeForce RTX 4060 Laptop GPU -> RunLogger @ run.py: Ln 55
+>>> 19:23:03 | INFO: Model: LinearSVM(
+  (linear): Linear(in_features=2, out_features=1, bias=True)
+) -> RunLogger @ run.py: Ln 69
+>>> 19:23:03 | INFO: Loss: Hinge(reduction: mean, is_soft: False, C: 1.0) -> RunLogger @ run.py: Ln 70
+>>> 19:23:04 | INFO: Train Loss: 0.5069534301757812 -> RunLogger @ run.py: Ln 83
+>>> 19:23:04 | INFO: Validation Loss: 0.484375 -> RunLogger @ run.py: Ln 84
+>>> 19:23:05 | INFO: Weights: Parameter containing:
+tensor([[0.1646, 0.9579]], device='cuda:0', requires_grad=True) -> RunLogger @ run.py: Ln 86
+>>> 19:23:05 | INFO: Biases: Parameter containing:
+tensor([-0.4327], device='cuda:0', requires_grad=True) -> RunLogger @ run.py: Ln 87
