@@ -17,13 +17,12 @@ from torch.utils.data import (
     random_split
 )
 
-import numpy as np
 
 # User-defined classes
 from utils.base import (
     # BaseLogger,
     FileLogger,
-    LinearSVM,
+    LinearRegression,
     Hinge,
     Trainer
 )
@@ -33,7 +32,6 @@ from utils.preprocess import clusters
 
 # Plotting
 import matplotlib.pyplot as plt
-from matplotlib.pyplot import colormaps
 
 plt.style.use("seaborn-v0_8")
 plt.rcParams["font.family"] = "monospace"
@@ -63,7 +61,7 @@ trainData, valData = random_split(data, (0.8, 0.2), generator=GENERATOR)
 trainLoader = DataLoader(trainData, batch_size=BATCH_SIZE, generator=GENERATOR, shuffle=True)
 valLoader = DataLoader(valData, batch_size=BATCH_SIZE, generator=GENERATOR, shuffle=True)
 
-model = LinearSVM(in_dims=2).to(DEVICE)
+model = LinearRegression(in_dims=2).to(DEVICE)      # Linear SVM
 criteria = Hinge(reduction='mean', is_soft=False)
 
 logger.info(f"Model: {model}")

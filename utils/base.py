@@ -29,14 +29,15 @@ TEST_DIR: Path | str = ROOT / "test"
 LOG_DIR: Path | str = ROOT / "logs"
 
 class BaseLogger(logging.Logger):
-    """
-    Base Logger class for logging, handling exceptions and configuration.
-
-    Parameters:
-        name (`str`): Name of the logger.
-        level (`int`): Logging level. Default is `logging.NOTSET`.
-    """
     def __init__(self, name: str, level: int = logging.NOTSET):
+        """
+        Base Logger class for logging, handling exceptions and configuration.
+
+        :param name: Name of the logger.
+        :type name: str
+        :param level: Logging level. Default is ``logging.NOTSET``.
+        :type level: int
+        """
         super().__init__(name, level)
         self._formatter = logging.Formatter(     # >>> 14:54:23 | INFO: BaseLogger @ config.py: Ln 48
             ">>> %(asctime)s | %(levelname)s: %(msg)s -> %(name)s @ %(filename)s: Ln %(lineno)d",
@@ -55,17 +56,27 @@ class BaseLogger(logging.Logger):
 
 
 class FileLogger(BaseLogger):
-    """
-    Logger that saves the logs to a set of files
+    def __init__(
+            self, name: str,
+            filename: str,
+            path: str | Path = LOG_DIR,
+            level: int = logging.INFO,
+            n_backup: int = 0
+    ):
+        """
+        Logger that saves the logs to a set of files.
 
-    Parameters:
-        name (`str`): Name of the logger.
-        filename (`str`): Name of the file to save the logs.
-        path (`str`): Path to the directory where the log file will be saved. Default is `'logs'` directory.
-        level (`int`): Logging level. Default is `logging.INFO`.
-        n_backup (`int`): Number of backup files to keep. Default is `0` (No rollover).
-    """
-    def __init__(self, name: str, filename: str, path: str | Path = LOG_DIR, level: int = logging.INFO, n_backup: int = 0):
+        :param name: Name of the logger.
+        :type name: str
+        :param filename: Name of the file to save the logs.
+        :type filename: str
+        :param path: Path to the directory where the log file will be saved. Default is ``'logs'`` directory.
+        :type path: str
+        :param level: Logging level. Default is ``logging.INFO``.
+        :type level: int
+        :param n_backup: Number of backup files to keep. Default is ``0`` (No rollover).
+        :type n_backup: int
+        """
         self._filename = filename
         self._path = path
         self._n_backup = n_backup
@@ -74,7 +85,7 @@ class FileLogger(BaseLogger):
         
     def _handler(self) -> None:
         """
-        Set the handler for the logger. This is a "file" handler that outputs to a file.
+        Set the handler for the logger.
         """
         if not os.path.exists(self._path):
             os.makedirs(self._path)
@@ -90,28 +101,15 @@ class FileLogger(BaseLogger):
 
 class CustomDataset(Dataset):
     """
-    A custom dataset class for handling data and corresponding labels. 
+    A custom dataset class for handling data and corresponding labels.
 
-    This class inherits from PyTorch's `Dataset` and allows the option to apply 
+    This class inherits from PyTorch's :class:`torch.utils.data.Dataset` and allows the option to apply
     transformations on the data samples.
 
-    Attributes
-    ----------
-    data : Union[List[Any], np.ndarray, torch.Tensor]
-        List, array, or tensor of data samples.
-    labels : Union[List[Any], np.ndarray, torch.Tensor]
-        Corresponding labels for the data samples.
-    transform : Optional[Callable]
-        A callable function or transformation to apply to each data sample.
-
-    Methods
-    -------
-    __len__()
-        Returns the total number of samples in the dataset.
-    __getitem__(idx: int)
-        Retrieves a sample and its label by index, applying transformation if available.
+    :ivar data: List, array, or tensor of data samples.
+    :ivar labels: Corresponding labels for the data samples.
+    :ivar transform: A callable function or transformation to apply to each data sample.
     """
-
     def __init__(
         self, 
         data: Union[List[Any], torch.Tensor], 
@@ -121,14 +119,12 @@ class CustomDataset(Dataset):
         """
         Initializes the dataset with data samples and labels, along with an optional transform.
 
-        Parameters
-        ----------
-        data : Union[List[Any], torch.Tensor]
-            List or tensor of data samples.
-        labels : Union[List[Any], torch.Tensor]
-            Corresponding labels for the data samples.
-        transform : Optional[Callable], optional
-            Optional transformation to be applied to the data samples, by default None.
+        :param data: List or tensor of data samples.
+        :type data: Union[List[Any], torch.Tensor]
+        :param labels: Corresponding labels for the data samples.
+        :type labels: Union[List[Any], torch.Tensor]
+        :param transform: Optional transformation to be applied to the data samples, by default None.
+        :type transform: Optional[Callable]
         """
         self.data = data
         self.labels = labels
@@ -138,10 +134,8 @@ class CustomDataset(Dataset):
         """
         Returns the total number of samples in the dataset.
 
-        Returns
-        -------
-        int
-            Number of samples in the dataset.
+        :return: Number of samples in the dataset.
+        :rtype: int
         """
         return len(self.data)
 
@@ -149,19 +143,13 @@ class CustomDataset(Dataset):
         """
         Retrieves a sample and its corresponding label by index.
 
-        Parameters
-        ----------
-        idx : int
-            Index of the sample and label to retrieve.
+        :param idx: Index of the sample and label to retrieve.
+        :type idx: int
+        :return: A tuple containing the data sample and its corresponding label.
+        :rtype: Tuple[Any, Any]
 
-        Returns
-        -------
-        Tuple[Any, Any]
-            A tuple containing the data sample and its corresponding label.
-
-        Notes
-        -----
-        If the `labels` attribute is `None`, only the sample is returned.
+        .. note::
+            If the ``labels`` attribute is ``None``, only the sample is returned.
         """
         sample = self.data[idx]
         label = self.labels[idx] if self.labels is not None else None
@@ -179,13 +167,18 @@ class Trainer:
         """
         Initializes the Trainer class.
 
-        Args:
-            model (torch.nn.Module): The PyTorch model to be trained.
-            train_loader (torch.utils.data.DataLoader): DataLoader for the training dataset.
-            val_loader (torch.utils.data.DataLoader): DataLoader for the validation dataset.
-            optimizer (torch.optim.Optimizer): Optimizer for the training process (e.g., Adam, SGD).
-            criterion (torch.nn.Module): Loss function for calculating the loss.
-            device (torch.device): Device to run the computations (either 'cpu' or 'cuda').
+        :param model: The PyTorch model to be trained.
+        :type model: torch.nn.Module
+        :param train_loader: DataLoader for the training dataset.
+        :type train_loader: torch.utils.data.DataLoader
+        :param val_loader: DataLoader for the validation dataset.
+        :type val_loader: torch.utils.data.DataLoader
+        :param optimizer: Optimizer for the training process (e.g., Adam, SGD).
+        :type optimizer: torch.optim.Optimizer
+        :param criterion: Loss function for calculating the loss.
+        :type criterion: torch.nn.Module
+        :param device: Device to run the computations (either 'cpu' or 'cuda').
+        :type device: torch.device
         """
         self.model = model
         self.train_loader = train_loader
@@ -200,8 +193,10 @@ class Trainer:
         """
         Returns a string representation of the Trainer object,
         including the model type, data loaders, optimizer, criterion, and device.
+
+        :return: String summary of the Trainer.
+        :rtype: str
         """
-        # Try to get the number of batches from the loaders if available.
         try:
             train_batches = len(self.train_loader)
         except Exception:
@@ -212,16 +207,16 @@ class Trainer:
             val_batches = "N/A"
         
         repr_str = (
-            f"{'T R A I N E R'.center(40)}\n"
-            f"{'*===' * 10}\n"
-            f"*=> Model\n\t {self.model.__class__.__name__} ({self.model.__repr__()})\n"
-            f"*=> Train Loader\n\t {self.train_loader.__class__.__name__} with \"{train_batches}\" batches\n"
-            f"*=> Val Loader\n\t {self.val_loader.__class__.__name__} with \"{val_batches}\" batches\n"
-            f"*=> Optimizer\n\t {self.optimizer.__class__.__name__} ({self.optimizer.__repr__()})\n"
-            f"*=> Criterion\n\t {self.criterion.__repr__()}\n"
-            f"*=> Device\n\t {str(self.device).upper()}\n"
-            f")\n"
-            f"{'*===' * 10}\n"
+            f"{' Trainer Summary ':=^50}\n"
+            f"Model        : {self.model.__class__.__name__}\n"
+            f"  {self.model}\n"
+            f"Train Loader : {self.train_loader.__class__.__name__} ({train_batches} batches)\n"
+            f"Val Loader   : {self.val_loader.__class__.__name__} ({val_batches} batches)\n"
+            f"Optimizer    : {self.optimizer.__class__.__name__}\n"
+            f"  {self.optimizer}\n"
+            f"Criterion    : {self.criterion}\n"
+            f"Device       : {self.device}\n"
+            f"{'='*50}\n"
         )
         return repr_str
 
@@ -230,8 +225,10 @@ class Trainer:
         """
         Trains the model for a given number of epochs with a single progress bar.
 
-        Args:
-            num_epochs (int): Number of epochs to train the model.
+        :param num_epochs: Number of epochs to train the model.
+        :type num_epochs: int
+        :return: Training and validation loss dictionaries.
+        :rtype: Tuple[dict, dict]
         """
         progress_bar = tqdm(total=num_epochs, desc="Training Progress", position=0, leave=True)
 
@@ -278,11 +275,10 @@ class Trainer:
         """
         Validates the model after each epoch.
 
-        Args:
-            epoch (int): The current epoch number.
-
-        Returns:
-            float: Average validation loss for the epoch.
+        :param epoch: The current epoch number.
+        :type epoch: int
+        :return: Average validation loss for the epoch.
+        :rtype: float
         """
         self.model.eval()
         total_val_loss = 0
@@ -311,29 +307,17 @@ class LinearRegression(Module):
     """
     A simple linear regression model implemented with PyTorch.
 
-    Attributes
-    ----------
-    w : torch.Tensor
-        Weights for the linear regression model.
-    b : torch.Tensor
-        Bias for the linear regression model.
-
-    Methods
-    -------
-    forward(X: torch.Tensor) -> torch.Tensor
-        Performs a forward pass (predicts the output for input X).
+    :ivar w: Weights for the linear regression model.
+    :ivar b: Bias for the linear regression model.
     """
-
     def __init__(self, in_dims: int, out_dims: int = 1):
         """
         Initializes the LinearRegression model with random weights and bias.
 
-        Parameters
-        ----------
-        in_dims : int
-            Number of input features (dimension of the input).
-        out_dims : int, optional
-            Number of output features (default is 1 for basic regression).
+        :param in_dims: Number of input features (dimension of the input).
+        :type in_dims: int
+        :param out_dims: Number of output features (default is 1 for basic regression).
+        :type out_dims: int
         """
         super().__init__()
 
@@ -343,48 +327,31 @@ class LinearRegression(Module):
         """
         Performs the forward pass through the linear regression model.
 
-        Parameters
-        ----------
-        X : torch.Tensor
-            Input tensor of shape (batch_size, in_dims).
-
-        Returns
-        -------
-        torch.Tensor
-            Predicted output tensor of shape (batch_size, out_dims).
+        :param X: Input tensor of shape (batch_size, in_dims).
+        :type X: torch.Tensor
+        :return: Predicted output tensor of shape (batch_size, out_dims).
+        :rtype: torch.Tensor
         """
         return self.linear(X)
 
 class LogisticRegression(LinearRegression):
     """
-    A simple logistic regression model implemented with PyTorch, inheriting from the `LinearRegression` class.
+    A simple logistic regression model implemented with PyTorch, inheriting from the :class:`LinearRegression` class.
 
-    Attributes
-    ----------
-    w : Tensor
-        Weights of the logistic regression model.
-    b : Tensor
-        Bias term of the logistic regression model.
-    multinomial : bool
-        Indicates whether the model is for binary or multinomial classification.
-
-    Methods
-    -------
-    forward(X: Tensor) -> Tensor
-        Performs a forward pass and outputs probabilities.
-    """ 
+    :ivar w: Weights of the logistic regression model.
+    :ivar b: Bias term of the logistic regression model.
+    :ivar multinomial: Indicates whether the model is for binary or multinomial classification.
+    """
     def __init__(self, in_dims: int, out_dims: int = 1, multinomial: bool = False):
         """
         Initializes the LogisticRegression model with random weights and bias.
 
-        Parameters
-        ----------
-        in_dims : int
-            Number of input features (dimension of the input).
-        out_dims : int, optional
-            Number of output features. For binary classification, this is usually 1. Default is 1.
-        multinomial : bool
-            Indicates whether the model is for binary or multinomial classification.
+        :param in_dims: Number of input features (dimension of the input).
+        :type in_dims: int
+        :param out_dims: Number of output features. For binary classification, this is usually 1. Default is 1.
+        :type out_dims: int
+        :param multinomial: Indicates whether the model is for binary or multinomial classification.
+        :type multinomial: bool
         """
         if multinomial and out_dims < 2:
             raise ValueError("For multinomial classification, out_dims must be at least 2.")
@@ -398,17 +365,12 @@ class LogisticRegression(LinearRegression):
         """
         Performs the forward pass through the logistic regression model.
 
-        Parameters
-        ----------
-        X : Tensor
-            Input tensor of shape (batch_size, in_dims).
-
-        Returns
-        -------
-        Tensor
-            Predicted probabilities:
+        :param X: Input tensor of shape (batch_size, in_dims).
+        :type X: Tensor
+        :return: Predicted probabilities:
             - For binary classification, shape is (batch_size, 1), with probabilities for the positive class.
             - For multinomial classification, shape is (batch_size, out_dims), with probabilities over all classes.
+        :rtype: Tensor
         """
         logits = super().forward(X)
 
@@ -417,78 +379,35 @@ class LogisticRegression(LinearRegression):
         
         return torch.sigmoid(logits)
     
-class LinearSVM(LinearRegression):
-    """
-    Linear Support Vector Machine (SVM) model.
-
-    This class implements a linear SVM using PyTorch. It supports both hard-margin
-    and soft-margin SVM, with an option to control the regularization strength.
-
-    Methods
-    -------
-    `forward(X: torch.Tensor) -> torch.Tensor`
-        Performs a forward pass (predicts the output for input X).
-    """
-    def __init__(self, in_dims: int) -> None:
-        """
-        Initializes the LinearSVM model.
-
-        Parameters
-        ----------
-        `in_dims` : int
-            Number of input features.
-        """
-        super().__init__(in_dims)
-
-    def forward(self, X: torch.Tensor) -> Tensor:
-        """
-        Performs the forward pass through the linear SVM model.
-
-        Parameters
-        ----------
-        X : torch.Tensor
-            Input tensor of shape (batch_size, in_dims).
-
-        Returns
-        -------
-        torch.Tensor
-            Predicted output tensor of shape (batch_size, 1).
-        """
-        return super().forward(X)
-    
 class Hinge(Module):
     """
     Calculates the hinge loss for SVM.
 
-    Attributes
-    ----------
-    `reduction` : str, optional
-        Specifies the reduction to apply to the output:
-        `'none' | 'mean' | 'sum'`. `'none'`: no reduction will be applied,
-        `'mean'`: the sum of the output will be divided by the number of
-        elements in the output, `'sum'`: the output will be summed.
-        Default: `'mean'`
-    `is_soft` : bool, optional
-        Whether to use soft-margin SVM. Default is False.
-    `C` : float, optional
-        Regularization parameter (inverse of regularization strength). Used only when `is_soft` is True. Default is 1.0.
+    :param reduction: Specifies the reduction to apply to the output: ``'none' | 'mean' | 'sum'``.
+        ``'none'``: no reduction will be applied,
+        ``'mean'``: the sum of the output will be divided by the number of
+        elements in the output, ``'sum'``: the output will be summed.
+        Default: ``'mean'``
+    :type reduction: str
+    :param is_soft: Whether to use soft-margin SVM. Default is False.
+    :type is_soft: bool
+    :param C: Regularization parameter (inverse of regularization strength). Used only when ``is_soft`` is True. Default is 1.0.
+    :type C: float
     """
     def __init__(self, reduction: str = 'mean', is_soft: bool = False, C: float = 1.0) -> None:
         """
         Initializes the Hinge module.
 
-        Parameters
-        ----------
-        `reduction` : str, optional
-            Specifies the reduction to apply to the output:
-            'none' | 'mean' | 'sum'. 'none': no reduction will be applied,
-        'mean': the sum of the output will be divided by the number of
-        elements in the output, 'sum': the output will be summed.
-            Default: 'mean'
-        `is_soft` : bool, optional
-            Whether to use soft-margin SVM. Default is False.
-        `C` : float, optional
-            Regularization parameter (inverse of regularization strength). Used only when `is_soft` is True. Default is 1.0.
+        :param reduction: Specifies the reduction to apply to the output: ``'none' | 'mean' | 'sum'``.
+            ``'none'``: no reduction will be applied,
+            ``'mean'``: the sum of the output will be divided by the number of
+            elements in the output, ``'sum'``: the output will be summed.
+            Default: ``'mean'``
+        :type reduction: str
+        :param is_soft: Whether to use soft-margin SVM. Default is False.
+        :type is_soft: bool
+        :param C: Regularization parameter (inverse of regularization strength). Used only when ``is_soft`` is True. Default is 1.0.
+        :type C: float
         """
         super().__init__()
         self.reduction = reduction
@@ -502,8 +421,8 @@ class Hinge(Module):
         This representation includes the reduction method used, whether soft-margin SVM is enabled,
         and the regularization parameter C.
 
-        Returns:
-            `str`: A formatted string representing the current state of the Hinge loss instance.
+        :return: A formatted string representing the current state of the Hinge loss instance.
+        :rtype: str
         """
         return f"Hinge(reduction: {self.reduction}, is_soft: {self.is_soft}, C: {self.C})"
 
@@ -511,17 +430,14 @@ class Hinge(Module):
         """
         Calculates the hinge loss.
 
-        Parameters
-        ----------
-        `output` : Tensor
-            The output from the model.
-        `target` : Tensor
-            The target values (should be 1 or -1).
-        
-        Returns
-        -------
-        Tensor
-            The calculated hinge loss.
+        :param output: The output from the model.
+        :type output: Tensor
+        :param target: The target values (should be 1 or -1).
+        :type target: Tensor
+        :param weights: The model weights (required for soft-margin SVM).
+        :type weights: Optional[Tensor]
+        :return: The calculated hinge loss.
+        :rtype: Tensor
         """
         loss = Func.relu(1 - target * output.squeeze())
 
