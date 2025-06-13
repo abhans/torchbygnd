@@ -106,3 +106,10 @@ dependencies = [
     "wheel==0.45.1",
     "wrapt==1.17.2",
 ]
+
+[tool.uv.sources]
+torch = { index = "pytorch" }
+
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cu128"
